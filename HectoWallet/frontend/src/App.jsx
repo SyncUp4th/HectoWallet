@@ -6,10 +6,10 @@ import ExplorerPage from './pages/ExplorerPage.jsx'
 import SettlementPage from './pages/SettlementPage.jsx'
 
 const TABS = [
-  { to: '/assets', label: '자산' },
-  { to: '/swap', label: '스왑' },
-  { to: '/explorer', label: '트랜잭션 탐색기' },
-  { to: '/settlement', label: '정산' },
+  { to: '/assets', label: '자산', icon: 'ti-wallet' },
+  { to: '/swap', label: '스왑', icon: 'ti-arrows-exchange' },
+  { to: '/explorer', label: '탐색기', icon: 'ti-receipt-2' },
+  { to: '/settlement', label: '정산', icon: 'ti-building-bank' },
 ]
 
 export default function App() {
@@ -35,14 +35,6 @@ export default function App() {
         </div>
       </div>
 
-      <nav className="tabbar" role="tablist">
-        {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} className={({ isActive }) => 'tabbtn' + (isActive ? ' active' : '')}>
-            {t.label}
-          </NavLink>
-        ))}
-      </nav>
-
       <Routes>
         <Route path="/" element={<Navigate to="/assets" replace />} />
         <Route path="/assets" element={<AssetsPage />} />
@@ -50,6 +42,15 @@ export default function App() {
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/settlement" element={<SettlementPage />} />
       </Routes>
+
+      <nav className="bottomnav" role="tablist" aria-label="주요 메뉴">
+        {TABS.map((t) => (
+          <NavLink key={t.to} to={t.to} className={({ isActive }) => 'navitem' + (isActive ? ' active' : '')}>
+            <i className={`ti ${t.icon}`} aria-hidden="true"></i>
+            <span>{t.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   )
 }

@@ -35,43 +35,41 @@ export default function SettlementPage() {
       <div className="section-h">법인별 순포지션</div>
       <div className="poslist">
         {data.positions.map((p) => {
-          const pct = Math.round((Math.abs(p.net) / maxAbs) * 50)
+          const pct = Math.round((Math.abs(p.net) / maxAbs) * 100)
           const positive = p.net >= 0
           return (
             <div className="posrow" key={p.company}>
-              <span className="name">{p.company}</span>
-              <div className="bar">
-                <div style={{ [positive ? 'left' : 'right']: '50%', width: `${pct}%`, background: positive ? 'var(--success)' : 'var(--danger)' }}></div>
+              <div className="posrow-top">
+                <span className="name">{p.company}</span>
+                <span className="val" style={{ color: positive ? 'var(--success)' : 'var(--danger)' }}>
+                  {positive ? '+' : ''}{p.net.toLocaleString()} SP
+                </span>
               </div>
-              <span className="val" style={{ color: positive ? 'var(--success)' : 'var(--danger)' }}>
-                {positive ? '+' : ''}{p.net.toLocaleString()} SP
-              </span>
+              <div className="bar">
+                <div style={{ [positive ? 'left' : 'right']: 0, width: `${pct}%`, background: positive ? 'var(--success)' : 'var(--danger)' }}></div>
+              </div>
             </div>
           )
         })}
       </div>
 
       <div className="section-h">법인 간 정산 내역</div>
-      <div className="card" style={{ padding: '1rem 1.25rem' }}>
-        <div className="tablewrap">
-          <table className="ledger">
-            <thead>
-              <tr><th>채권사</th><th>채무사</th><th>코인 흐름</th><th>수량</th><th>SP 환산</th><th>상태</th></tr>
-            </thead>
-            <tbody>
-              {data.ledger.map((row, i) => (
-                <tr key={i}>
-                  <td>{row.creditor}</td>
-                  <td>{row.debtor}</td>
-                  <td className="num-mono">{row.flow}</td>
-                  <td className="num-mono">{row.qty.toLocaleString()}</td>
-                  <td className="num-mono">{row.sp.toLocaleString()} SP</td>
-                  <td><span className={`badge ${row.status === 'done' ? 'badge-success' : 'badge-pending'}`}>{row.status === 'done' ? '정산완료' : '대기'}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="rowlist">
+        {data.ledger.map((row, i) => (
+          <div className="ledgerrow" key={i}>
+            <div className="ledgerrow-top">
+              <span className="ledgerrow-companies">{row.creditor} ← {row.debtor}</span>
+              <span className={`badge ${row.status === 'done' ? 'badge-success' : 'badge-pending'}`}>
+                {row.status === 'done' ? '정산완료' : '대기'}
+              </span>
+            </div>
+            <div className="ledgerrow-flow">{row.flow}</div>
+            <div className="ledgerrow-amt">
+              {row.qty.toLocaleString()}
+              <small>({row.sp.toLocaleString()} SP)</small>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   )

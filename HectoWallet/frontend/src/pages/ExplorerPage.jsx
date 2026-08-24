@@ -5,6 +5,7 @@ const STATUS_LABEL = { success: '성공', pending: '대기', failed: '실패' }
 const STATUS_CLASS = { success: 'badge-success', pending: 'badge-pending', failed: 'badge-failed' }
 const TYPE_LABEL = { swap: '스왑', transfer: '전송' }
 const TYPE_CLASS = { swap: 'badge-swap', transfer: 'badge-transfer' }
+const TYPE_ICON = { swap: 'ti-arrows-exchange', transfer: 'ti-arrow-up-right' }
 
 export default function ExplorerPage() {
   const [data, setData] = useState(null)
@@ -30,7 +31,7 @@ export default function ExplorerPage() {
       <div className="searchbar">
         <input
           type="text"
-          placeholder="주소, 트랜잭션 해시, 코인 심볼로 검색"
+          placeholder="주소, 해시, 코인 심볼로 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -44,29 +45,26 @@ export default function ExplorerPage() {
         <div className="statcard"><div className="l">최근 동기화 번호</div><div className="v">#{data.stats.lastSyncBlock.toLocaleString()}</div></div>
       </div>
 
-      <div className="card" style={{ padding: '1rem 1.25rem' }}>
-        <div className="tablewrap">
-          <table className="txtable">
-            <thead>
-              <tr><th>해시</th><th>유형</th><th>흐름</th><th>수량</th><th>상태</th><th>시간</th></tr>
-            </thead>
-            <tbody>
-              {filtered.map((tx) => (
-                <tr key={tx.hash}>
-                  <td><span className="hashlink">{tx.hash}</span></td>
-                  <td><span className={`badge ${TYPE_CLASS[tx.type]}`}>{TYPE_LABEL[tx.type]}</span></td>
-                  <td className="flow">{tx.fromCompany} <i className="ti ti-arrow-right" style={{ fontSize: 13 }} aria-hidden="true"></i> {tx.toCompany}</td>
-                  <td className="flow amt">{tx.flow}</td>
-                  <td><span className={`badge ${STATUS_CLASS[tx.status]}`}>{STATUS_LABEL[tx.status]}</span></td>
-                  <td className="timeago">{tx.time}</td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--ink-mute)', padding: '1.5rem 0' }}>검색 결과가 없습니다.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="rowlist">
+        {filtered.map((tx) => (
+          <div className="txrow" key={tx.hash}>
+            <div className="txrow-top">
+              <span className="txrow-type"><i className={`ti ${TYPE_ICON[tx.type]}`} aria-hidden="true"></i>{TYPE_LABEL[tx.type]}</span>
+              <span className={`badge ${STATUS_CLASS[tx.status]}`}>{STATUS_LABEL[tx.status]}</span>
+            </div>
+            <div className="txrow-flow">
+              <span className={`badge ${TYPE_CLASS[tx.type]}`}>{tx.fromCompany}</span>
+              <i className="ti ti-arrow-right" style={{ fontSize: 13 }} aria-hidden="true"></i>
+              <span>{tx.toCompany}</span>
+            </div>
+            <div className="txrow-amt">{tx.flow}</div>
+            <div className="txrow-meta">
+              <span className="hashlink">{tx.hash}</span>
+              <span className="timeago">{tx.time}</span>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && <p className="empty-note">검색 결과가 없습니다.</p>}
       </div>
     </section>
   )
