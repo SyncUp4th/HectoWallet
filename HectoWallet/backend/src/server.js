@@ -1,20 +1,7 @@
-import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
-import { walletRouter } from './routes/wallet.js'
-import { swapRouter } from './routes/swap.js'
-import { transactionsRouter } from './routes/transactions.js'
-import { settlementRouter } from './routes/settlement.js'
-
-const app = express()
-app.use(cors())
-app.use(express.json())
-
-app.get('/health', (req, res) => res.json({ ok: true }))
-app.use('/api/wallet', walletRouter)
-app.use('/api/swap', swapRouter)
-app.use('/api/transactions', transactionsRouter)
-app.use('/api/settlement', settlementRouter)
+// Local/standalone entry point (npm run dev / npm run start). Vercel never
+// runs this file — it calls the app directly via api/index.js instead, since
+// serverless functions don't call .listen() themselves.
+import { app } from './app.js'
 
 const port = process.env.PORT || 8080
 app.listen(port, () => console.log(`HectoWallet backend listening on :${port}`))

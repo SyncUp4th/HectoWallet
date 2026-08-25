@@ -30,6 +30,26 @@ API points it at. A treasury mnemonic would only be needed for a future
 real "보내기" (send) endpoint, and even then belongs in an env var / secrets
 manager, never in source — this repo is public.
 
+## Deploying to Vercel
+
+This is a separate Vercel project from the frontend — same GitHub repo, but
+its own **Import** with **Root Directory** set to `HectoWallet/backend`.
+`api/index.js` exports the Express app as a serverless function; `vercel.json`
+rewrites every `/api/*` and `/health` request to it so Express's own router
+still sees the full path. No framework preset needed — Vercel detects the
+`/api` folder on its own.
+
+1. vercel.com/new → Import `SyncUp4th/HectoWallet` again → Root Directory
+   `HectoWallet/backend` → Deploy.
+2. **Never upload `.env`.** Add the same keys from `.env.example` one at a
+   time in that Vercel project's **Settings → Environment Variables** —
+   Vercel injects them into `process.env` at runtime, same effect as `.env`
+   locally, but not committed anywhere.
+3. Once deployed you'll get a URL like `https://hectowallet-backend.vercel.app`.
+   Set that as `VITE_API_BASE_URL` in the **frontend** Vercel project's
+   Environment Variables (and redeploy the frontend) to point it at this
+   backend instead of the built-in mock data.
+
 ## Self-check
 
 The two pieces of non-trivial logic (swap fee math, Etherscan tx grouping):
