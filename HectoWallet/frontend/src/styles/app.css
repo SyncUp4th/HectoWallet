@@ -110,7 +110,7 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .walletcard:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .wc-head{display:flex;align-items:center;justify-content:space-between}
 .wc-id{display:flex;align-items:center;gap:10px}
-.wc-badge{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;font-weight:600}
+.wc-badge{min-width:30px;height:30px;padding:0 10px;border-radius:100px;background:rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;font-weight:600;white-space:nowrap}
 .wc-name{font-size:14px;font-weight:700}
 .wc-amt{font-family:var(--font-mono);font-size:14px;font-weight:500;text-align:right;line-height:1.25;font-variant-numeric:tabular-nums;flex-shrink:0}
 .wc-amt small{display:block;font-size:10px;font-weight:400;opacity:0.8;letter-spacing:0.02em;margin-top:2px}

@@ -8,14 +8,14 @@ import SettlementPage from './pages/SettlementPage.jsx'
 const TABS = [
   { to: '/assets', label: '자산', icon: 'ti-wallet' },
   { to: '/swap', label: '스왑', icon: 'ti-arrows-exchange' },
-  { to: '/explorer', label: '탐색기', icon: 'ti-receipt-2' },
+  { to: '/explorer', label: '거래내역', icon: 'ti-receipt-2' },
   { to: '/settlement', label: '정산', icon: 'ti-building-bank' },
 ]
 
 export default function App() {
   return (
     <div className="app">
-      <h1 className="sr-only">HectoWallet — 그룹사 코인 지갑, 스왑, 트랜잭션 탐색, 정산</h1>
+      <h1 className="sr-only">HectoWallet — 그룹사 코인 지갑, 스왑, 거래내역, 정산</h1>
 
       <div className="topbar">
         <div className="brand">

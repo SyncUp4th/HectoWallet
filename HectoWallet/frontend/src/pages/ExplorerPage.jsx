@@ -21,7 +21,7 @@ export default function ExplorerPage() {
   if (error) {
     return (
       <div className="pageerror">
-        <span>트랜잭션을 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
+        <span>거래내역을 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
         <button type="button" onClick={retry}>다시 시도</button>
       </div>
     )
@@ -35,7 +35,7 @@ export default function ExplorerPage() {
 
   return (
     <section className="panel">
-      <h2 className="pagetitle">트랜잭션 탐색기</h2>
+      <h2 className="pagetitle">거래내역</h2>
 
       <div className="searchbar">
         <i className="ti ti-search" aria-hidden="true"></i>

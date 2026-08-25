@@ -72,7 +72,7 @@ export default function SwapPage() {
       } else {
         const q = computeSwapQuote(fromAmount)
         await new Promise((r) => setTimeout(r, 400))
-        setResult(`(데모) ${fromAmount.toLocaleString()} ${displaySymbol(fromSymbol)} → ${q.toAmount.toLocaleString()} ${displaySymbol(toSymbol)} 스왑 완료`)
+        setResult(`${fromAmount.toLocaleString()} ${displaySymbol(fromSymbol)} → ${q.toAmount.toLocaleString()} ${displaySymbol(toSymbol)} 스왑 완료`)
       }
     } catch (err) {
       setResult(err.message)
@@ -110,7 +110,7 @@ export default function SwapPage() {
 
         <div className="swap-flip">
           <button className="flipbtn" onClick={handleFlip} aria-label="보낼 코인과 받을 코인 바꾸기" type="button">
-            <i className="ti ti-arrow-down" aria-hidden="true"></i>
+            <i className="ti ti-arrows-up-down" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -131,10 +131,10 @@ export default function SwapPage() {
         </div>
 
         {invalid && <p className="swap-error">같은 코인끼리는 스왑할 수 없습니다.</p>}
-        {!onChainReady && <p className="swap-note">{isConnected ? '스왑 컨트랙트 설정 대기 중 — 데모 시뮬레이션으로 동작합니다.' : '지갑을 연결하면 실제 온체인 스왑을 사용할 수 있습니다.'}</p>}
+        {!onChainReady && <p className="swap-note">{isConnected ? '스왑 컨트랙트 연결 준비 중입니다.' : '지갑을 연결하면 실제 온체인 스왑을 사용할 수 있습니다.'}</p>}
 
         <button className="swap-cta" onClick={handleSwap} disabled={invalid || fromAmount <= 0 || submitting}>
-          {submitting ? '처리 중…' : onChainReady ? '온체인 스왑하기' : '스왑하기 (데모)'}
+          {submitting ? '처리 중…' : onChainReady ? '온체인 스왑하기' : '스왑하기'}
         </button>
 
         {result && <p className="swap-result">{result}</p>}
