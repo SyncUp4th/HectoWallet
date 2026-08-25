@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAccount, useDisconnect } from 'wagmi'
 import { api } from '../api/index.js'
-import { HECTO_COINS, coinName } from '../constants/coins.js'
+import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
 import { computeSwapQuote } from '../lib/swap.js'
 import TokenSelect from '../components/TokenSelect.jsx'
 import WalletConnectModal from '../components/WalletConnectModal.jsx'
+import RateInfoTooltip from '../components/RateInfoTooltip.jsx'
 
 // Called only once a wallet is connected and the backend reports a
 // configured swap contract (address + non-empty ABI). The exact function
@@ -18,9 +20,15 @@ export default function SwapPage() {
   const { address, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
   const [walletModalOpen, setWalletModalOpen] = useState(false)
+  const [searchParams] = useSearchParams()
 
-  const [fromSymbol, setFromSymbol] = useState('HFPC')
-  const [toSymbol, setToSymbol] = useState('HIPC')
+  // Arriving from a wallet card's "이 코인 스왑하기" preselects that coin.
+  const requestedFrom = searchParams.get('from')
+  const initialFrom = PEGGED_COINS.some((c) => c.symbol === requestedFrom) ? requestedFrom : 'HFPC'
+  const initialTo = PEGGED_COINS.find((c) => c.symbol !== initialFrom)?.symbol ?? 'HIPC'
+
+  const [fromSymbol, setFromSymbol] = useState(initialFrom)
+  const [toSymbol, setToSymbol] = useState(initialTo)
   const [fromAmount, setFromAmount] = useState(1000)
   const [quote, setQuote] = useState(null)
   const [rates, setRates] = useState([])
@@ -64,7 +72,7 @@ export default function SwapPage() {
       } else {
         const q = computeSwapQuote(fromAmount)
         await new Promise((r) => setTimeout(r, 400))
-        setResult(`(데모) ${fromAmount.toLocaleString()} ${fromSymbol} → ${q.toAmount.toLocaleString()} ${toSymbol} 스왑 완료`)
+        setResult(`(데모) ${fromAmount.toLocaleString()} ${displaySymbol(fromSymbol)} → ${q.toAmount.toLocaleString()} ${displaySymbol(toSymbol)} 스왑 완료`)
       }
     } catch (err) {
       setResult(err.message)
@@ -97,7 +105,7 @@ export default function SwapPage() {
         <div className="swaplabel">보낼 수량</div>
         <div className="swapbox">
           <input value={fromAmount.toLocaleString()} onChange={handleAmountChange} inputMode="numeric" />
-          <TokenSelect coins={HECTO_COINS} value={fromSymbol} onChange={setFromSymbol} />
+          <TokenSelect coins={PEGGED_COINS} value={fromSymbol} onChange={setFromSymbol} />
         </div>
 
         <div className="swap-flip">
@@ -109,14 +117,17 @@ export default function SwapPage() {
         <div className="swaplabel">받을 수량 (예상)</div>
         <div className="swapbox">
           <input value={(quote?.toAmount ?? 0).toLocaleString()} readOnly />
-          <TokenSelect coins={HECTO_COINS} value={toSymbol} onChange={setToSymbol} />
+          <TokenSelect coins={PEGGED_COINS} value={toSymbol} onChange={setToSymbol} />
         </div>
 
         <div className="swap-details">
-          <div><span>고정 교환비율</span><span>1 {fromSymbol} = 1 {toSymbol} (1 SP 공통 페그)</span></div>
+          <div>
+            <span className="rate-label-wrap">고정 교환비율<RateInfoTooltip rates={rates} /></span>
+            <span>1 {displaySymbol(fromSymbol)} = 1 {displaySymbol(toSymbol)} (1 KRW 공통 페그)</span>
+          </div>
           <div><span>가격 영향</span><span>0.00%</span></div>
           <div><span>스왑 수수료</span><span>{(((quote?.feeRate) ?? 0) * 100).toFixed(2)}%</span></div>
-          <div><span>최소 수령량</span><span>{(quote?.minReceived ?? 0).toLocaleString()} {toSymbol}</span></div>
+          <div><span>최소 수령량</span><span>{(quote?.minReceived ?? 0).toLocaleString()} {displaySymbol(toSymbol)}</span></div>
         </div>
 
         {invalid && <p className="swap-error">같은 코인끼리는 스왑할 수 없습니다.</p>}
@@ -127,17 +138,6 @@ export default function SwapPage() {
         </button>
 
         {result && <p className="swap-result">{result}</p>}
-      </div>
-
-      <div className="card rate-card">
-        <h3>고정 교환비율 · 1 SP = 1 코인 (전 계열사 공통)</h3>
-        <table className="ratetable">
-          <tbody>
-            {rates.map((r) => (
-              <tr key={r.symbol}><td>{r.symbol} {coinName(r.symbol)}</td><td>{r.rate}</td></tr>
-            ))}
-          </tbody>
-        </table>
       </div>
 
       <div className="card rate-card">

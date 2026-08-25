@@ -1,17 +1,25 @@
 import { useState } from 'react'
-import { HECTO_COINS } from '../constants/coins.js'
+import { useNavigate } from 'react-router-dom'
+import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
 
-const PEGGED_SYMBOLS = new Set(HECTO_COINS.map((c) => c.symbol))
+const PEGGED_SYMBOLS = new Set(PEGGED_COINS.map((c) => c.symbol))
 
 export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
+  const navigate = useNavigate()
   const [showToast, setShowToast] = useState(false)
   const isPegged = PEGGED_SYMBOLS.has(coin.symbol)
+  const label = displaySymbol(coin.symbol)
 
   function handleCopy(e) {
     e.stopPropagation()
     navigator.clipboard?.writeText(coin.address).catch(() => {})
     setShowToast(true)
     setTimeout(() => setShowToast(false), 1600)
+  }
+
+  function handleSwap(e) {
+    e.stopPropagation()
+    navigate(`/swap?from=${coin.symbol}`)
   }
 
   function handleKeyDown(e) {
@@ -35,23 +43,27 @@ export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
     >
       <div className="wc-head">
         <div className="wc-id">
-          <div className="wc-badge">{coin.symbol}</div>
+          <div className="wc-badge">{label}</div>
           <div className="wc-name">{coin.name}</div>
         </div>
         <div className="wc-amt">
           {coin.balance.toLocaleString()}
-          <small>{coin.symbol}</small>
+          <small>{label}</small>
         </div>
       </div>
       <div className="wc-body">
-        <div className="wc-balance">{coin.balance.toLocaleString()} {coin.symbol}</div>
+        <div className="wc-balance">{coin.balance.toLocaleString()} {label}</div>
         <div className="wc-krw">
-          {isPegged ? `${coin.balance.toLocaleString()} SP · 1 ${coin.symbol} = 1 SP` : '헥토 계열사 SP 페그 대상 아님'}
+          {!isPegged
+            ? '헥토 계열사 KRW 페그 대상 아님 (앱 내 스왑 불가)'
+            : coin.symbol === 'USDT'
+              ? 'KRW 1:1 기준 자산'
+              : `${coin.balance.toLocaleString()} KRW · 1 ${label} = 1 KRW`}
         </div>
         <div className="wc-actions">
           <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>보내기</button>
           <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>받기</button>
-          <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>스왑</button>
+          <button className="wc-actbtn" onClick={handleSwap}>스왑</button>
         </div>
         <div className="wc-addr" onClick={handleCopy}>
           <span>{coin.address}</span>

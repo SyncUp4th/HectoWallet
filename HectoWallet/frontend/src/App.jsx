@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import { COINS } from './constants/coins.js'
+import { COINS, displaySymbol } from './constants/coins.js'
 import AssetsPage from './pages/AssetsPage.jsx'
 import SwapPage from './pages/SwapPage.jsx'
 import ExplorerPage from './pages/ExplorerPage.jsx'
@@ -29,7 +29,7 @@ export default function App() {
               className="tick"
               style={{ background: `var(--c-${c.symbol.toLowerCase()}-bg)`, color: `var(--c-${c.symbol.toLowerCase()})` }}
             >
-              {c.symbol}
+              {displaySymbol(c.symbol)}
             </span>
           ))}
         </div>

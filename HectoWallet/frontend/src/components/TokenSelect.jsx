@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { displaySymbol } from '../constants/coins.js'
 
 export default function TokenSelect({ coins, value, onChange }) {
   const [open, setOpen] = useState(false)
@@ -41,7 +42,7 @@ export default function TokenSelect({ coins, value, onChange }) {
         aria-expanded={open}
       >
         <span className="dot" style={{ background: `var(--c-${value.toLowerCase()})` }}></span>
-        {value}
+        {displaySymbol(value)}
         <i className="ti ti-chevron-down" style={{ fontSize: 13 }} aria-hidden="true"></i>
       </button>
 
@@ -66,7 +67,7 @@ export default function TokenSelect({ coins, value, onChange }) {
                   aria-selected={c.symbol === value}
                 >
                   <span className="dot" style={{ background: `var(--c-${c.symbol.toLowerCase()})` }}></span>
-                  <span>{c.symbol}</span>
+                  <span>{displaySymbol(c.symbol)}</span>
                   <span className="tokenpick-name">{c.name}</span>
                 </button>
               </li>

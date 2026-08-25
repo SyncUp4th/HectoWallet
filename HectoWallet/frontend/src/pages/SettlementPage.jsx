@@ -25,13 +25,12 @@ export default function SettlementPage() {
           <i className="ti ti-calendar" style={{ fontSize: 14 }} aria-hidden="true"></i>
           {data.period} 정산
         </div>
-        <button className="settle-cta" type="button">정산 실행</button>
       </div>
 
       <div className="sumgrid">
         <div className="sumcard"><div className="l">정산 대상 거래</div><div className="v">{data.summary.txCount.toLocaleString()}건</div></div>
-        <div className="sumcard"><div className="l">순이동 총액</div><div className="v">{data.summary.netMoved.toLocaleString()} SP</div></div>
-        <div className="sumcard"><div className="l">미정산 잔액</div><div className="v" style={{ color: 'var(--warn)' }}>{data.summary.unsettled.toLocaleString()} SP</div></div>
+        <div className="sumcard"><div className="l">순이동 총액</div><div className="v">{data.summary.netMoved.toLocaleString()} KRW</div></div>
+        <div className="sumcard"><div className="l">미정산 잔액</div><div className="v" style={{ color: 'var(--warn)' }}>{data.summary.unsettled.toLocaleString()} KRW</div></div>
       </div>
 
       <div className="section-h">법인별 순포지션</div>
@@ -44,7 +43,7 @@ export default function SettlementPage() {
               <div className="posrow-top">
                 <span className="name">{p.company}</span>
                 <span className="val" style={{ color: positive ? 'var(--success)' : 'var(--danger)' }}>
-                  {positive ? '+' : ''}{p.net.toLocaleString()} SP
+                  {positive ? '+' : ''}{p.net.toLocaleString()} KRW
                 </span>
               </div>
               <div className="bar">
@@ -68,7 +67,7 @@ export default function SettlementPage() {
             <div className="ledgerrow-flow">{row.flow}</div>
             <div className="ledgerrow-amt">
               {row.qty.toLocaleString()}
-              <small>({row.sp.toLocaleString()} SP)</small>
+              <small>({row.krw.toLocaleString()} KRW)</small>
             </div>
           </div>
         ))}

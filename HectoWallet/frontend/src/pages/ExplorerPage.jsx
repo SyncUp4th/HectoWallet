@@ -38,18 +38,23 @@ export default function ExplorerPage() {
       <h2 className="pagetitle">트랜잭션 탐색기</h2>
 
       <div className="searchbar">
+        <i className="ti ti-search" aria-hidden="true"></i>
         <input
           type="text"
           placeholder="주소, 해시, 코인 심볼로 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button className="searchbtn" type="button">검색</button>
+        {query && (
+          <button type="button" className="searchclear" onClick={() => setQuery('')} aria-label="검색어 지우기">
+            <i className="ti ti-x" aria-hidden="true"></i>
+          </button>
+        )}
       </div>
 
       <div className="statgrid">
         <div className="statcard"><div className="l">오늘 거래 수</div><div className="v">{data.stats.todayCount.toLocaleString()}건</div></div>
-        <div className="statcard"><div className="l">24시간 거래대금</div><div className="v">{data.stats.volume24h.toLocaleString()} SP</div></div>
+        <div className="statcard"><div className="l">24시간 거래대금</div><div className="v">{data.stats.volume24h.toLocaleString()} KRW</div></div>
         <div className="statcard"><div className="l">활성 지갑</div><div className="v">{data.stats.activeWallets.toLocaleString()}개</div></div>
         <div className="statcard"><div className="l">최근 동기화 번호</div><div className="v">#{data.stats.lastSyncBlock.toLocaleString()}</div></div>
       </div>
