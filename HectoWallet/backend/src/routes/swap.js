@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { HECTO_SYMBOLS } from '../constants/coins.js'
+import { PEGGED_SYMBOLS } from '../constants/coins.js'
 import { computeSwapQuote } from '../lib/swapMath.js'
 import { getSwapContractConfig } from '../config.js'
 
 export const swapRouter = Router()
 
 swapRouter.get('/rates', (req, res) => {
-  res.json({ base: 'SP', rates: HECTO_SYMBOLS.map((symbol) => ({ symbol, rate: 1 })) })
+  res.json({ base: 'KRW', rates: PEGGED_SYMBOLS.map((symbol) => ({ symbol, rate: 1 })) })
 })
 
 swapRouter.post('/quote', (req, res) => {

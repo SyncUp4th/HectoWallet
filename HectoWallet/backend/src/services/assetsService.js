@@ -29,6 +29,6 @@ export async function getAssets() {
     }),
   )
 
-  const totalSp = coins.reduce((sum, c) => sum + c.balance, 0)
-  return { totalSp, coins }
+  const totalKrw = coins.reduce((sum, c) => sum + c.balance, 0)
+  return { totalKrw, coins }
 }

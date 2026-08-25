@@ -1,4 +1,4 @@
-import { SYMBOL_NAME } from '../constants/coins.js'
+import { SYMBOL_NAME, displaySymbol } from '../constants/coins.js'
 import { relativeTime } from './relativeTime.js'
 
 function formatAmount(transfer) {
@@ -45,7 +45,7 @@ export function groupIntoTransactions(transfers, address) {
         type: 'swap',
         fromCompany: companyLabel(out.tokenSymbol),
         toCompany: companyLabel(inn.tokenSymbol),
-        flow: `${formatAmount(out).toLocaleString()} ${out.tokenSymbol} → ${formatAmount(inn).toLocaleString()} ${inn.tokenSymbol}`,
+        flow: `${formatAmount(out).toLocaleString()} ${displaySymbol(out.tokenSymbol)} → ${formatAmount(inn).toLocaleString()} ${displaySymbol(inn.tokenSymbol)}`,
         status: 'success',
         time: relativeTime(timestampMs),
         timestampMs,
@@ -57,7 +57,7 @@ export function groupIntoTransactions(transfers, address) {
         type: 'transfer',
         fromCompany: shortAddress(t.from),
         toCompany: shortAddress(t.to),
-        flow: `${formatAmount(t).toLocaleString()} ${t.tokenSymbol}`,
+        flow: `${formatAmount(t).toLocaleString()} ${displaySymbol(t.tokenSymbol)}`,
         status: 'success',
         time: relativeTime(timestampMs),
         timestampMs,

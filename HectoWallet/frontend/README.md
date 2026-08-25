@@ -17,12 +17,12 @@ as they implement this contract (`src/api/http.js`):
 
 | Method | Path                    | Body                                      | Response |
 |--------|-------------------------|--------------------------------------------|----------|
-| GET    | `/api/wallet/assets`      | —                                          | `{ totalSp, coins: [{ symbol, name, balance, address }] }` |
-| GET    | `/api/swap/rates`         | —                                          | `{ base: "SP", rates: [{ symbol, rate }] }` |
+| GET    | `/api/wallet/assets`      | —                                          | `{ totalKrw, coins: [{ symbol, name, balance, address }] }` |
+| GET    | `/api/swap/rates`         | —                                          | `{ base: "KRW", rates: [{ symbol, rate }] }` |
 | POST   | `/api/swap/quote`         | `{ fromSymbol, toSymbol, fromAmount }`     | `{ toAmount, feeRate, priceImpact, minReceived }` |
 | GET    | `/api/swap/contract-config` | —                                        | `{ address, abi, chainId, configured }` |
 | GET    | `/api/transactions`       | query params (e.g. `page`)                 | `{ stats: {...}, items: [{ hash, type, fromCompany, toCompany, flow, status, time }] }` |
-| GET    | `/api/settlement`         | `?period=2026-08`                          | `{ period, summary: {...}, positions: [{ company, net }], ledger: [{ creditor, debtor, flow, qty, sp, status }] }` |
+| GET    | `/api/settlement`         | `?period=2026-08`                          | `{ period, summary: {...}, positions: [{ company, net }], ledger: [{ creditor, debtor, flow, qty, krw, status }] }` |
 
 There is no swap-execution endpoint — the connected browser wallet (MetaMask,
 Coinbase Wallet, WalletConnect) signs and sends the swap transaction directly
@@ -30,7 +30,11 @@ to the contract at `/api/swap/contract-config`. The backend never holds a
 signing key for that flow.
 
 All coin amounts are whole numbers — every HectoWallet coin is pegged 1:1 to
-SP (`src/lib/swap.js`), so a swap only moves by the fee, never by a market rate.
+KRW (`src/lib/swap.js`), so a swap only moves by the fee, never by a market rate.
+The `USDT` symbol is the real deployed contract standing in as the 1-KRW
+reference asset (no separate KRW stablecoin was deployed for the demo) —
+`src/constants/coins.js`'s `displaySymbol()` renders it as "KRW" everywhere
+in the UI instead of its on-chain ticker.
 
 ## Wallet connect
 
