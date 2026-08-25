@@ -137,12 +137,21 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 
 /* ---- Swap (single column, thumb-reachable controls) ---- */
 .walletbar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:1rem;flex-wrap:wrap}
-.walletbar-label{font-size:12.5px;color:var(--ink-soft)}
 .walletbar-addr{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:12.5px;color:var(--success)}
-.walletbar-btns{display:flex;gap:6px;flex-wrap:wrap}
-.walletbar-btn{padding:6px 12px;border-radius:100px;border:0.5px solid var(--border-strong);background:var(--surface);font-size:12px;font-weight:500;cursor:pointer;color:var(--ink)}
-.walletbar-btn:disabled{opacity:0.6;cursor:not-allowed}
+.walletbar-connect-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:100px;border:none;background:var(--accent);color:var(--surface);font-size:13px;font-weight:700;cursor:pointer;width:100%;justify-content:center}
 .walletbar-disconnect{padding:6px 12px;border-radius:100px;border:0.5px solid var(--border-strong);background:var(--surface);font-size:12px;cursor:pointer;color:var(--ink-soft)}
+
+.walletmodal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;justify-content:center;z-index:100}
+.walletmodal{width:100%;max-width:var(--app-max);background:var(--surface);border-radius:20px 20px 0 0;padding:1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));box-shadow:0 -10px 30px -10px rgba(0,0,0,0.4)}
+.walletmodal-head{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:700;margin-bottom:1rem}
+.walletmodal-close{background:none;border:none;color:var(--ink-soft);font-size:18px;cursor:pointer;padding:4px;line-height:1}
+.walletmodal-list{list-style:none;margin:0 0 1rem;padding:0;display:flex;flex-direction:column;gap:8px}
+.walletmodal-item{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0.5px solid var(--border);border-radius:12px;background:var(--surface-2);font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;text-align:left;font-family:var(--font-ui)}
+.walletmodal-item:hover{border-color:var(--border-strong)}
+.walletmodal-item:disabled{opacity:0.6;cursor:not-allowed}
+.walletmodal-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:16px}
+.walletmodal-error{font-size:12px;color:var(--danger);margin:0 0 10px}
+.walletmodal-disclaimer{font-size:11.5px;color:var(--ink-mute);text-align:center;line-height:1.5;margin:0}
 .swap-error{font-size:12px;color:var(--danger);margin:0 0 12px}
 .swap-note{font-size:12px;color:var(--ink-mute);margin:0 0 12px}
 .swap-result{font-size:12.5px;color:var(--ink-soft);margin-top:10px}

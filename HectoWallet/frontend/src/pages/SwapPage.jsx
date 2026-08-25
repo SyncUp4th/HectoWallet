@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { useAccount, useDisconnect } from 'wagmi'
 import { api } from '../api/index.js'
 import { HECTO_COINS, coinName } from '../constants/coins.js'
 import { computeSwapQuote } from '../lib/swap.js'
 import TokenSelect from '../components/TokenSelect.jsx'
+import WalletConnectModal from '../components/WalletConnectModal.jsx'
 
 // Called only once a wallet is connected and the backend reports a
 // configured swap contract (address + non-empty ABI). The exact function
@@ -15,8 +16,8 @@ async function executeOnChainSwap() {
 
 export default function SwapPage() {
   const { address, isConnected } = useAccount()
-  const { connect, connectors, isPending: connecting } = useConnect()
   const { disconnect } = useDisconnect()
+  const [walletModalOpen, setWalletModalOpen] = useState(false)
 
   const [fromSymbol, setFromSymbol] = useState('HFC')
   const [toSymbol, setToSymbol] = useState('HTC')
@@ -83,18 +84,14 @@ export default function SwapPage() {
             <button type="button" className="walletbar-disconnect" onClick={() => disconnect()}>연결 해제</button>
           </>
         ) : (
-          <>
-            <span className="walletbar-label">외부 지갑 연결</span>
-            <div className="walletbar-btns">
-              {connectors.map((c) => (
-                <button key={c.uid} type="button" className="walletbar-btn" disabled={connecting} onClick={() => connect({ connector: c })}>
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </>
+          <button type="button" className="walletbar-connect-btn" onClick={() => setWalletModalOpen(true)}>
+            <i className="ti ti-wallet" aria-hidden="true"></i>
+            지갑 연결하기
+          </button>
         )}
       </div>
+
+      {walletModalOpen && <WalletConnectModal onClose={() => setWalletModalOpen(false)} />}
 
       <div className="card swapcard">
         <div className="swaplabel">보낼 수량</div>
