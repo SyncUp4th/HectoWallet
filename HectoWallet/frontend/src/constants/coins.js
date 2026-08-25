@@ -6,11 +6,10 @@ export const COINS = [
   { symbol: 'HFPC', name: '헥토파이낸셜' },
 ]
 
-// The internal 1 coin = 1 KRW peg covers Hecto's own subsidiary point coins
-// plus the USDT contract, used here as the real-world reference asset since
-// no separate KRW stablecoin was deployed for the demo — OLIVEPC (partner
-// brand point) stays outside it, same as OYC/MUC were before the rename.
-export const PEGGED_COINS = COINS.filter((c) => c.symbol === 'USDT' || c.symbol === 'HHPC' || c.symbol === 'HIPC' || c.symbol === 'HFPC')
+// Every coin here is swappable 1:1 with KRW — OLIVEPC (partner brand point)
+// joined the same peg group so it can be swapped like the rest, even though
+// it isn't a Hecto subsidiary coin.
+export const PEGGED_COINS = COINS
 
 export function coinName(symbol) {
   return COINS.find((c) => c.symbol === symbol)?.name ?? symbol

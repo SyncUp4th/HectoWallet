@@ -1,19 +1,33 @@
 import { api } from '../api/index.js'
 import { useApiData } from '../hooks/useApiData.js'
 
+// Standalone desktop page — not part of the mobile app shell/bottom nav.
+// Settlement is a back-office tool, viewed on a PC, not a phone.
 export default function SettlementPage() {
   const { data, error, retry } = useApiData(() => api.getSettlement())
 
-  if (error) {
-    return (
-      <div className="pageerror">
-        <span>정산 데이터를 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
-        <button type="button" onClick={retry}>다시 시도</button>
+  return (
+    <div className="desktop-page">
+      <div className="desktop-header">
+        <div className="brand">
+          <div className="brand-mark">H</div>
+          <div className="brand-name">HectoWallet · 정산 관리</div>
+        </div>
       </div>
-    )
-  }
-  if (!data) return <div className="pageloading">불러오는 중…</div>
 
+      {error && (
+        <div className="pageerror">
+          <span>정산 데이터를 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
+          <button type="button" onClick={retry}>다시 시도</button>
+        </div>
+      )}
+      {!error && !data && <div className="pageloading">불러오는 중…</div>}
+      {!error && data && <SettlementBody data={data} />}
+    </div>
+  )
+}
+
+function SettlementBody({ data }) {
   const maxAbs = Math.max(1, ...data.positions.map((p) => Math.abs(p.net)))
 
   return (

@@ -1,21 +1,25 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { COINS, displaySymbol } from './constants/coins.js'
 import AssetsPage from './pages/AssetsPage.jsx'
 import SwapPage from './pages/SwapPage.jsx'
 import ExplorerPage from './pages/ExplorerPage.jsx'
+import StorePage from './pages/StorePage.jsx'
 import SettlementPage from './pages/SettlementPage.jsx'
 
 const TABS = [
   { to: '/assets', label: '자산', icon: 'ti-wallet' },
   { to: '/swap', label: '스왑', icon: 'ti-arrows-exchange' },
   { to: '/explorer', label: '거래내역', icon: 'ti-receipt-2' },
-  { to: '/settlement', label: '정산', icon: 'ti-building-bank' },
+  { to: '/store', label: '스토어', icon: 'ti-shopping-bag' },
 ]
 
-export default function App() {
+// The mobile app shell (topbar + bottom nav) wraps only the phone-sized
+// screens. Settlement is a PC-only back-office page, so it renders outside
+// this shell entirely — see the routes below.
+function MobileShell() {
   return (
     <div className="app">
-      <h1 className="sr-only">HectoWallet — 그룹사 코인 지갑, 스왑, 거래내역, 정산</h1>
+      <h1 className="sr-only">HectoWallet — 그룹사 코인 지갑, 스왑, 거래내역, 스토어</h1>
 
       <div className="topbar">
         <div className="brand">
@@ -35,13 +39,7 @@ export default function App() {
         </div>
       </div>
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/assets" replace />} />
-        <Route path="/assets" element={<AssetsPage />} />
-        <Route path="/swap" element={<SwapPage />} />
-        <Route path="/explorer" element={<ExplorerPage />} />
-        <Route path="/settlement" element={<SettlementPage />} />
-      </Routes>
+      <Outlet />
 
       <nav className="bottomnav" role="tablist" aria-label="주요 메뉴">
         {TABS.map((t) => (
@@ -52,5 +50,20 @@ export default function App() {
         ))}
       </nav>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<MobileShell />}>
+        <Route path="/" element={<Navigate to="/assets" replace />} />
+        <Route path="/assets" element={<AssetsPage />} />
+        <Route path="/swap" element={<SwapPage />} />
+        <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/store" element={<StorePage />} />
+      </Route>
+      <Route path="/settlement" element={<SettlementPage />} />
+    </Routes>
   )
 }

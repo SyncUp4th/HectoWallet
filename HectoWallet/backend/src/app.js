@@ -6,6 +6,7 @@ import { walletRouter } from './routes/wallet.js'
 import { swapRouter } from './routes/swap.js'
 import { transactionsRouter } from './routes/transactions.js'
 import { settlementRouter } from './routes/settlement.js'
+import { storeRouter } from './routes/store.js'
 
 export const app = express()
 app.use(cors())
@@ -27,3 +28,4 @@ app.use('/api/wallet', walletRouter)
 app.use('/api/swap', swapRouter)
 app.use('/api/transactions', transactionsRouter)
 app.use('/api/settlement', settlementRouter)
+app.use('/api/store', storeRouter)

@@ -19,4 +19,5 @@ export const httpApi = {
   getSwapContractConfig: () => request('/api/swap/contract-config'),
   getTransactions: (params = {}) => request(`/api/transactions?${new URLSearchParams(params)}`),
   getSettlement: (period) => request(`/api/settlement?period=${encodeURIComponent(period ?? '')}`),
+  getStoreProducts: () => request('/api/store/products'),
 }

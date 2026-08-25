@@ -23,11 +23,12 @@ as they implement this contract (`src/api/http.js`):
 | GET    | `/api/swap/contract-config` | —                                        | `{ address, abi, chainId, configured }` |
 | GET    | `/api/transactions`       | query params (e.g. `page`)                 | `{ stats: {...}, items: [{ hash, type, fromCompany, toCompany, flow, status, time }] }` |
 | GET    | `/api/settlement`         | `?period=2026-08`                          | `{ period, summary: {...}, positions: [{ company, net }], ledger: [{ creditor, debtor, flow, qty, krw, status }] }` |
+| GET    | `/api/store/products`    | —                                          | `{ brand, currency, products: [{ id, name, description, priceHhpc }] }` |
 
-There is no swap-execution endpoint — the connected browser wallet (MetaMask,
-Coinbase Wallet, WalletConnect) signs and sends the swap transaction directly
-to the contract at `/api/swap/contract-config`. The backend never holds a
-signing key for that flow.
+Swap execution is a local simulation (`computeSwapQuote` in `src/lib/swap.js`)
+— there's no execution endpoint. The store's "구매하기" reuses the same
+math client-side: if the HHPC balance can't cover a product, it auto-swaps
+the shortfall from the first other coin with enough balance (`StorePage.jsx`).
 
 All coin amounts are whole numbers — every HectoWallet coin is pegged 1:1 to
 KRW (`src/lib/swap.js`), so a swap only moves by the fee, never by a market rate.
@@ -36,12 +37,22 @@ reference asset (no separate KRW stablecoin was deployed for the demo) —
 `src/constants/coins.js`'s `displaySymbol()` renders it as "KRW" everywhere
 in the UI instead of its on-chain ticker.
 
-## Wallet connect
+## Wallet connect (built, not currently wired up)
 
-Set `VITE_WALLETCONNECT_PROJECT_ID` (see `.env.example`) to enable the
-WalletConnect connector (mobile QR-connect, Binance Wallet app, etc.) — free
-at https://cloud.reown.com. MetaMask, Coinbase Wallet extension, and other
-EIP-6963 wallets are auto-detected without any key.
+`src/wagmi.js` and `src/components/WalletConnectModal.jsx` implement wagmi-based
+MetaMask/Coinbase Wallet/WalletConnect connection (set
+`VITE_WALLETCONNECT_PROJECT_ID`, see `.env.example`, for the WalletConnect
+connector — free at https://cloud.reown.com). No page currently renders it:
+the swap flow moved to an in-app KRW-balance model instead of an
+external-wallet DeFi flow. The infrastructure is left in place if a future
+page needs it again.
+
+## Routes
+
+`/assets`, `/swap`, `/explorer`, `/store` share the mobile app shell (top
+bar + bottom nav) in `App.jsx`. `/settlement` is a standalone desktop page
+outside that shell — a back-office tool meant for a PC, not the phone-width
+column the rest of the app uses.
 
 ## Self-check
 

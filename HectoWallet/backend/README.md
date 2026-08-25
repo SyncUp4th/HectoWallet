@@ -20,9 +20,12 @@ coin with `balance: 0`) so the frontend can show a "not wired up yet" state.
 |---|---|---|
 | `SEPOLIA_RPC_URL` | Reliable on-chain balance reads (falls back to a public RPC without it) | infura.io / alchemy.com, free tier |
 | `TREASURY_ADDRESS` | Which wallet's balances/history to show — this is a public address, not a secret | your own treasury wallet |
-| `TOKEN_ADDRESS_*` (8 of these) | Per-coin balance reads | your deployed ERC20 contracts |
-| `ETHERSCAN_API_KEY` | Real transaction history in the explorer tab | etherscan.io/apis, free self-serve signup |
-| `SWAP_CONTRACT_ADDRESS` + `src/chain/swapAbi.json` | Serves the swap contract's address/ABI to the frontend at `/api/swap/contract-config` so the connected browser wallet can call it directly | your deployed swap contract |
+| `TOKEN_ADDRESS_*` (5 of these) | Per-coin balance reads | your deployed ERC20 contracts |
+| `ETHERSCAN_API_KEY` | Real transaction history in the 거래내역 tab | etherscan.io/apis, free self-serve signup |
+| `SWAP_CONTRACT_ADDRESS` + `src/chain/swapAbi.json` | Serves the swap contract's address/ABI at `/api/swap/contract-config` — currently unused by the frontend (swap is a local simulation now), kept for a future on-chain-swap page | your deployed swap contract |
+
+`/api/store/products` is mock-only (`src/services/storeService.js`) — same
+status as `/api/settlement`, no real inventory backing it.
 
 This backend never holds a private key or signs anything — swap execution
 happens in the user's own wallet (MetaMask etc.) against the contract this

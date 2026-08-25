@@ -1,13 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
-
-const PEGGED_SYMBOLS = new Set(PEGGED_COINS.map((c) => c.symbol))
+import { displaySymbol } from '../constants/coins.js'
 
 export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
   const navigate = useNavigate()
   const [showToast, setShowToast] = useState(false)
-  const isPegged = PEGGED_SYMBOLS.has(coin.symbol)
   const label = displaySymbol(coin.symbol)
 
   function handleCopy(e) {
@@ -54,11 +51,7 @@ export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
       <div className="wc-body">
         <div className="wc-balance">{coin.balance.toLocaleString()} {label}</div>
         <div className="wc-krw">
-          {!isPegged
-            ? '헥토 계열사 KRW 페그 대상 아님 (앱 내 스왑 불가)'
-            : coin.symbol === 'USDT'
-              ? 'KRW 1:1 기준 자산'
-              : `${coin.balance.toLocaleString()} KRW · 1 ${label} = 1 KRW`}
+          {coin.symbol === 'USDT' ? 'KRW 1:1 기준 자산' : `${coin.balance.toLocaleString()} KRW · 1 ${label} = 1 KRW`}
         </div>
         <div className="wc-actions">
           <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>보내기</button>
