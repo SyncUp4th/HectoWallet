@@ -1,5 +1,6 @@
 import { getTreasuryAddress } from '../config.js'
 import { groupIntoTransactions } from '../lib/txGrouping.js'
+import { log, logError } from '../lib/logger.js'
 
 const SEPOLIA_CHAIN_ID = 11155111
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -14,16 +15,26 @@ export async function getTransactions() {
   }
 
   const url = `https://api.etherscan.io/v2/api?chainid=${SEPOLIA_CHAIN_ID}&module=account&action=tokentx&address=${address}&sort=desc&apikey=${apiKey}`
-  const res = await fetch(url)
-  const json = await res.json()
+  log('etherscan', 'tokentx request', { address, chainId: SEPOLIA_CHAIN_ID })
+
+  let json
+  try {
+    const res = await fetch(url)
+    json = await res.json()
+  } catch (err) {
+    logError('etherscan', 'tokentx request failed', err)
+    throw err
+  }
 
   if (json.status !== '1') {
     // Etherscan returns status "0" for both real errors and "no transactions found" — treat as empty, not fatal.
+    log('etherscan', 'tokentx returned no results', { message: json.message })
     return { stats: emptyStats, items: [], configured: true, note: json.message }
   }
 
   const transfers = json.result
   const items = groupIntoTransactions(transfers, address).slice(0, 25)
+  log('etherscan', 'tokentx response', { transferCount: transfers.length, groupedRows: items.length })
 
   const now = Date.now()
   const within24h = transfers.filter((t) => now - Number(t.timeStamp) * 1000 <= DAY_MS)
