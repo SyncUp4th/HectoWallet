@@ -7,6 +7,12 @@ const TYPE_LABEL = { swap: '스왑', transfer: '전송' }
 const TYPE_CLASS = { swap: 'badge-swap', transfer: 'badge-transfer' }
 const TYPE_ICON = { swap: 'ti-arrows-exchange', transfer: 'ti-arrow-up-right' }
 
+// Mock data ships shortened placeholder hashes ("0x9a2f...11c4") that don't
+// resolve on Etherscan — only link out once a real full hash is flowing in.
+function isFullHash(hash) {
+  return /^0x[0-9a-fA-F]{64}$/.test(hash)
+}
+
 export default function ExplorerPage() {
   const [data, setData] = useState(null)
   const [query, setQuery] = useState('')
@@ -59,7 +65,18 @@ export default function ExplorerPage() {
             </div>
             <div className="txrow-amt">{tx.flow}</div>
             <div className="txrow-meta">
-              <span className="hashlink">{tx.hash}</span>
+              {isFullHash(tx.hash) ? (
+                <a
+                  className="hashlink"
+                  href={`https://sepolia.etherscan.io/tx/${tx.hash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {tx.hash.slice(0, 10)}…{tx.hash.slice(-6)} <i className="ti ti-external-link" style={{ fontSize: 11 }} aria-hidden="true"></i>
+                </a>
+              ) : (
+                <span className="hashlink">{tx.hash}</span>
+              )}
               <span className="timeago">{tx.time}</span>
             </div>
           </div>

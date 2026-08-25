@@ -1,18 +1,35 @@
 import { useEffect, useState } from 'react'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { api } from '../api/index.js'
 import { HECTO_COINS, coinName } from '../constants/coins.js'
+import { computeSwapQuote } from '../lib/swap.js'
+import TokenSelect from '../components/TokenSelect.jsx'
+
+// Called only once a wallet is connected and the backend reports a
+// configured swap contract (address + non-empty ABI). The exact function
+// name/argument order depends on the real ABI, which isn't available yet —
+// wire this up as soon as it is, instead of guessing a signature now.
+async function executeOnChainSwap() {
+  throw new Error('스왑 컨트랙트 ABI가 아직 연결되지 않았습니다. ABI가 준비되면 이 함수만 채우면 됩니다.')
+}
 
 export default function SwapPage() {
+  const { address, isConnected } = useAccount()
+  const { connect, connectors, isPending: connecting } = useConnect()
+  const { disconnect } = useDisconnect()
+
   const [fromSymbol, setFromSymbol] = useState('HFC')
   const [toSymbol, setToSymbol] = useState('HTC')
   const [fromAmount, setFromAmount] = useState(1000)
   const [quote, setQuote] = useState(null)
   const [rates, setRates] = useState([])
+  const [contractConfig, setContractConfig] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState('')
 
   useEffect(() => {
     api.getRates().then((r) => setRates(r.rates))
+    api.getSwapContractConfig().then(setContractConfig)
   }, [])
 
   useEffect(() => {
@@ -31,35 +48,57 @@ export default function SwapPage() {
     setToSymbol(fromSymbol)
   }
 
+  const invalid = fromSymbol === toSymbol
+  const onChainReady = isConnected && contractConfig?.configured
+
   async function handleSwap() {
-    if (fromSymbol === toSymbol || fromAmount <= 0) return
+    if (invalid || fromAmount <= 0) return
     setSubmitting(true)
     setResult('')
     try {
-      const res = await api.executeSwap({ fromSymbol, toSymbol, fromAmount })
-      setResult(`${fromAmount.toLocaleString()} ${fromSymbol} → ${res.toAmount.toLocaleString()} ${toSymbol} 스왑 완료`)
-    } catch {
-      setResult('스왑에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+      if (onChainReady) {
+        await executeOnChainSwap()
+      } else {
+        const q = computeSwapQuote(fromAmount)
+        await new Promise((r) => setTimeout(r, 400))
+        setResult(`(데모) ${fromAmount.toLocaleString()} ${fromSymbol} → ${q.toAmount.toLocaleString()} ${toSymbol} 스왑 완료`)
+      }
+    } catch (err) {
+      setResult(err.message)
     } finally {
       setSubmitting(false)
     }
   }
 
-  const invalid = fromSymbol === toSymbol
-
   return (
     <section className="panel">
       <h2 className="pagetitle">코인 스왑</h2>
+
+      <div className="walletbar">
+        {isConnected ? (
+          <>
+            <span className="walletbar-addr"><i className="ti ti-plug-connected" style={{ fontSize: 14 }} aria-hidden="true"></i>{address.slice(0, 6)}...{address.slice(-4)}</span>
+            <button type="button" className="walletbar-disconnect" onClick={() => disconnect()}>연결 해제</button>
+          </>
+        ) : (
+          <>
+            <span className="walletbar-label">외부 지갑 연결</span>
+            <div className="walletbar-btns">
+              {connectors.map((c) => (
+                <button key={c.uid} type="button" className="walletbar-btn" disabled={connecting} onClick={() => connect({ connector: c })}>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="card swapcard">
         <div className="swaplabel">보낼 수량</div>
         <div className="swapbox">
           <input value={fromAmount.toLocaleString()} onChange={handleAmountChange} inputMode="numeric" />
-          <select className="tokenselect" value={fromSymbol} onChange={(e) => setFromSymbol(e.target.value)}>
-            {HECTO_COINS.map((c) => (
-              <option key={c.symbol} value={c.symbol}>{c.symbol}</option>
-            ))}
-          </select>
+          <TokenSelect coins={HECTO_COINS} value={fromSymbol} onChange={setFromSymbol} />
         </div>
 
         <div className="swap-flip">
@@ -71,11 +110,7 @@ export default function SwapPage() {
         <div className="swaplabel">받을 수량 (예상)</div>
         <div className="swapbox">
           <input value={(quote?.toAmount ?? 0).toLocaleString()} readOnly />
-          <select className="tokenselect" value={toSymbol} onChange={(e) => setToSymbol(e.target.value)}>
-            {HECTO_COINS.map((c) => (
-              <option key={c.symbol} value={c.symbol}>{c.symbol}</option>
-            ))}
-          </select>
+          <TokenSelect coins={HECTO_COINS} value={toSymbol} onChange={setToSymbol} />
         </div>
 
         <div className="swap-details">
@@ -85,13 +120,14 @@ export default function SwapPage() {
           <div><span>최소 수령량</span><span>{(quote?.minReceived ?? 0).toLocaleString()} {toSymbol}</span></div>
         </div>
 
-        {invalid && <p style={{ fontSize: 12, color: 'var(--danger)', margin: '0 0 12px' }}>같은 코인끼리는 스왑할 수 없습니다.</p>}
+        {invalid && <p className="swap-error">같은 코인끼리는 스왑할 수 없습니다.</p>}
+        {!onChainReady && <p className="swap-note">{isConnected ? '스왑 컨트랙트 설정 대기 중 — 데모 시뮬레이션으로 동작합니다.' : '지갑을 연결하면 실제 온체인 스왑을 사용할 수 있습니다.'}</p>}
 
         <button className="swap-cta" onClick={handleSwap} disabled={invalid || fromAmount <= 0 || submitting}>
-          {submitting ? '처리 중…' : '스왑하기'}
+          {submitting ? '처리 중…' : onChainReady ? '온체인 스왑하기' : '스왑하기 (데모)'}
         </button>
 
-        {result && <p style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 10 }}>{result}</p>}
+        {result && <p className="swap-result">{result}</p>}
       </div>
 
       <div className="card rate-card">

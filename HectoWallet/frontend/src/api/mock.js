@@ -32,9 +32,9 @@ export const mockApi = {
     return computeSwapQuote(fromAmount)
   },
 
-  async executeSwap(body) {
-    await delay(400)
-    return { status: 'success', ...computeSwapQuote(body.fromAmount) }
+  async getSwapContractConfig() {
+    await delay(100)
+    return { address: null, abi: [], chainId: 11155111, configured: false }
   },
 
   async getTransactions() {
