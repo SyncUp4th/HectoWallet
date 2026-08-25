@@ -95,6 +95,8 @@ button,input,select{font-size:16px}
 
 h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .pageloading{color:var(--ink-soft);font-size:13px;padding:2rem 0;text-align:center}
+.pageerror{color:var(--danger);font-size:13px;padding:2rem 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.pageerror button{padding:8px 16px;border:0.5px solid var(--border-strong);border-radius:9px;background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:500;cursor:pointer}
 .card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px}
 
 /* Fixed bottom tab bar (primary nav lives at the thumb, app-style) */

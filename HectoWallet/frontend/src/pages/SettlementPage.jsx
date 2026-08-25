@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react'
 import { api } from '../api/index.js'
+import { useApiData } from '../hooks/useApiData.js'
 
 export default function SettlementPage() {
-  const [data, setData] = useState(null)
+  const { data, error, retry } = useApiData(() => api.getSettlement())
 
-  useEffect(() => {
-    let cancelled = false
-    api.getSettlement().then((res) => { if (!cancelled) setData(res) })
-    return () => { cancelled = true }
-  }, [])
-
+  if (error) {
+    return (
+      <div className="pageerror">
+        <span>정산 데이터를 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
+        <button type="button" onClick={retry}>다시 시도</button>
+      </div>
+    )
+  }
   if (!data) return <div className="pageloading">불러오는 중…</div>
 
   const maxAbs = Math.max(1, ...data.positions.map((p) => Math.abs(p.net)))

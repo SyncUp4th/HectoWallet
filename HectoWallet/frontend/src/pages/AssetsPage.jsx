@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api } from '../api/index.js'
+import { useApiData } from '../hooks/useApiData.js'
 import WalletCard from '../components/WalletCard.jsx'
 
 export default function AssetsPage() {
-  const [data, setData] = useState(null)
+  const { data, error, retry } = useApiData(() => api.getAssets())
   const [expanded, setExpanded] = useState(null)
 
-  useEffect(() => {
-    let cancelled = false
-    api.getAssets().then((res) => { if (!cancelled) setData(res) })
-    return () => { cancelled = true }
-  }, [])
-
+  if (error) {
+    return (
+      <div className="pageerror">
+        <span>자산을 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
+        <button type="button" onClick={retry}>다시 시도</button>
+      </div>
+    )
+  }
   if (!data) return <div className="pageloading">불러오는 중…</div>
 
   return (

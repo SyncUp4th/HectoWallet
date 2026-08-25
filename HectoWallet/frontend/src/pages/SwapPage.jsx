@@ -28,13 +28,15 @@ export default function SwapPage() {
   const [result, setResult] = useState('')
 
   useEffect(() => {
-    api.getRates().then((r) => setRates(r.rates))
-    api.getSwapContractConfig().then(setContractConfig)
+    api.getRates().then((r) => setRates(r.rates)).catch(() => setRates([]))
+    api.getSwapContractConfig().then(setContractConfig).catch(() => setContractConfig({ address: null, abi: [], configured: false }))
   }, [])
 
   useEffect(() => {
     let cancelled = false
-    api.quoteSwap({ fromSymbol, toSymbol, fromAmount }).then((q) => { if (!cancelled) setQuote(q) })
+    api.quoteSwap({ fromSymbol, toSymbol, fromAmount })
+      .then((q) => { if (!cancelled) setQuote(q) })
+      .catch(() => { if (!cancelled) setQuote(computeSwapQuote(fromAmount)) })
     return () => { cancelled = true }
   }, [fromSymbol, toSymbol, fromAmount])
 

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api } from '../api/index.js'
+import { useApiData } from '../hooks/useApiData.js'
 
 const STATUS_LABEL = { success: '성공', pending: '대기', failed: '실패' }
 const STATUS_CLASS = { success: 'badge-success', pending: 'badge-pending', failed: 'badge-failed' }
@@ -14,15 +15,17 @@ function isFullHash(hash) {
 }
 
 export default function ExplorerPage() {
-  const [data, setData] = useState(null)
+  const { data, error, retry } = useApiData(() => api.getTransactions())
   const [query, setQuery] = useState('')
 
-  useEffect(() => {
-    let cancelled = false
-    api.getTransactions().then((res) => { if (!cancelled) setData(res) })
-    return () => { cancelled = true }
-  }, [])
-
+  if (error) {
+    return (
+      <div className="pageerror">
+        <span>트랜잭션을 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</span>
+        <button type="button" onClick={retry}>다시 시도</button>
+      </div>
+    )
+  }
   if (!data) return <div className="pageloading">불러오는 중…</div>
 
   const q = query.trim()
