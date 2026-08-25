@@ -30,6 +30,21 @@ export const mockApi = {
     return computeSwapQuote(fromAmount)
   },
 
+  async executeSwap({ fromSymbol, toSymbol, fromAmount }) {
+    await delay(800)
+    const quote = computeSwapQuote(fromAmount)
+    const mockHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+    return {
+      txHash: mockHash,
+      fromSymbol,
+      toSymbol,
+      fromAmount,
+      toAmount: quote.toAmount,
+      status: 'submitted',
+      explorerUrl: `https://sepolia.etherscan.io/tx/${mockHash}`,
+    }
+  },
+
   async getSwapContractConfig() {
     await delay(100)
     return { address: null, abi: [], chainId: 11155111, configured: false }

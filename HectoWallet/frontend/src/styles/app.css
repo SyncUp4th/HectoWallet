@@ -151,6 +151,8 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .swap-error{font-size:12px;color:var(--danger);margin:0 0 12px}
 .swap-note{font-size:12px;color:var(--ink-mute);margin:0 0 12px}
 .swap-result{font-size:12.5px;color:var(--ink-soft);margin-top:10px}
+.swap-txlink{color:var(--accent);text-decoration:none;white-space:nowrap}
+.swap-txlink:hover{text-decoration:underline}
 .tokenpick{position:relative}
 .tokenpick-panel{position:absolute;right:0;top:calc(100% + 6px);width:230px;background:var(--surface);border:0.5px solid var(--border-strong);border-radius:12px;box-shadow:0 10px 26px -10px rgba(0,0,0,0.35);padding:8px;z-index:30}
 .tokenpick-search{width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:9px;background:var(--surface-2);font-family:var(--font-ui);font-size:13px;color:var(--ink)}

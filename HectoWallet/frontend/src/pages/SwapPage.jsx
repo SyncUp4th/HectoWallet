@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/index.js'
 import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
-import { computeSwapQuote } from '../lib/swap.js'
 import TokenSelect from '../components/TokenSelect.jsx'
 import RateInfoTooltip from '../components/RateInfoTooltip.jsx'
 
@@ -52,13 +51,12 @@ export default function SwapPage() {
   async function handleSwap() {
     if (invalid || fromAmount <= 0) return
     setSubmitting(true)
-    setResult('')
+    setResult(null)
     try {
-      const q = computeSwapQuote(fromAmount)
-      await new Promise((r) => setTimeout(r, 400))
-      setResult(`${fromAmount.toLocaleString()} ${displaySymbol(fromSymbol)} → ${q.toAmount.toLocaleString()} ${displaySymbol(toSymbol)} 스왑 완료`)
+      const res = await api.executeSwap({ fromSymbol, toSymbol, fromAmount })
+      setResult({ ok: true, ...res })
     } catch (err) {
-      setResult(err.message)
+      setResult({ ok: false, message: err.message })
     } finally {
       setSubmitting(false)
     }
@@ -108,7 +106,15 @@ export default function SwapPage() {
           {submitting ? '처리 중…' : '스왑하기'}
         </button>
 
-        {result && <p className="swap-result">{result}</p>}
+        {result && result.ok && (
+          <p className="swap-result">
+            {result.fromAmount.toLocaleString()} {displaySymbol(result.fromSymbol)} → {result.toAmount.toLocaleString()} {displaySymbol(result.toSymbol)} 스왑 제출 완료{' '}
+            <a href={result.explorerUrl} target="_blank" rel="noreferrer" className="swap-txlink">
+              Etherscan <i className="ti ti-external-link" style={{ fontSize: 11 }} aria-hidden="true"></i>
+            </a>
+          </p>
+        )}
+        {result && !result.ok && <p className="swap-error">{result.message}</p>}
       </div>
     </section>
   )
