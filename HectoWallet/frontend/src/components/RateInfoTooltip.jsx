@@ -26,7 +26,7 @@ export default function RateInfoTooltip({ rates }) {
       </button>
       {open && (
         <div className="rateinfo-panel" role="tooltip">
-          <p className="rateinfo-title">1 KRW = 1 코인 (전 계열사 공통)</p>
+          <p className="rateinfo-title">1 원 = 1 코인 (전 계열사 공통)</p>
           <ul>
             {rates.map((r) => (
               <li key={r.symbol}>

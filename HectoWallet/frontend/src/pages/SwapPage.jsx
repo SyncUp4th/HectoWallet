@@ -95,7 +95,7 @@ export default function SwapPage() {
         <div className="swap-details">
           <div>
             <span className="rate-label-wrap">고정 교환비율<RateInfoTooltip rates={rates} /></span>
-            <span>1 {displaySymbol(fromSymbol)} = 1 {displaySymbol(toSymbol)} (1 KRW 공통 페그)</span>
+            <span>1 {displaySymbol(fromSymbol)} = 1 {displaySymbol(toSymbol)} (1 원 공통 페그)</span>
           </div>
           <div><span>가격 영향</span><span>0.00%</span></div>
           <div><span>스왑 수수료</span><span>{(((quote?.feeRate) ?? 0) * 100).toFixed(2)}%</span></div>

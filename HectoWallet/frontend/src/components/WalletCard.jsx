@@ -51,7 +51,7 @@ export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
       <div className="wc-body">
         <div className="wc-balance">{coin.balance.toLocaleString()} {label}</div>
         <div className="wc-krw">
-          {coin.symbol === 'USDT' ? 'KRW 1:1 기준 자산' : `${coin.balance.toLocaleString()} KRW · 1 ${label} = 1 KRW`}
+          {coin.symbol === 'USDT' ? '원화 1:1 기준 자산' : `${coin.balance.toLocaleString()} 원 · 1 ${label} = 1 원`}
         </div>
         <div className="wc-actions">
           <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>보내기</button>

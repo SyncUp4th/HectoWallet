@@ -54,7 +54,7 @@ export default function ExplorerPage() {
 
       <div className="statgrid">
         <div className="statcard"><div className="l">오늘 거래 수</div><div className="v">{data.stats.todayCount.toLocaleString()}건</div></div>
-        <div className="statcard"><div className="l">24시간 거래대금</div><div className="v">{data.stats.volume24h.toLocaleString()} KRW</div></div>
+        <div className="statcard"><div className="l">24시간 거래대금</div><div className="v">{data.stats.volume24h.toLocaleString()} 원</div></div>
         <div className="statcard"><div className="l">활성 지갑</div><div className="v">{data.stats.activeWallets.toLocaleString()}개</div></div>
         <div className="statcard"><div className="l">최근 동기화 번호</div><div className="v">#{data.stats.lastSyncBlock.toLocaleString()}</div></div>
       </div>

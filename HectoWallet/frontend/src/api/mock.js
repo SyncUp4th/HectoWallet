@@ -4,11 +4,11 @@ import { PEGGED_COINS } from '../constants/coins.js'
 const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const ASSETS = [
-  { symbol: 'USDT', name: '원화 (KRW)', balance: 500, address: '0xa1c2...9f3d' },
-  { symbol: 'OLIVEPC', name: '올리브영', balance: 4850, address: '0x6ac2...d904' },
-  { symbol: 'HHPC', name: '헥토헬스케어', balance: 9121, address: '0x7f3d...2b6c' },
+  { symbol: 'USDT', name: '원화 스테이블', balance: 500, address: '0xa1c2...9f3d' },
   { symbol: 'HIPC', name: '헥토이노베이션', balance: 3204, address: '0x2d91...77b4' },
   { symbol: 'HFPC', name: '헥토파이낸셜', balance: 58900, address: '0x51ac...9e20' },
+  { symbol: 'HHPC', name: '헥토헬스케어', balance: 9121, address: '0x7f3d...2b6c' },
+  { symbol: 'OLIVEPC', name: '올리브영', balance: 4850, address: '0x6ac2...d904' },
 ]
 
 const PEGGED_SYMBOLS = PEGGED_COINS.map((c) => c.symbol)
@@ -44,7 +44,7 @@ export const mockApi = {
         { hash: '0x7b6d...88e2', type: 'swap', fromCompany: '헥토헬스케어', toCompany: '헥토이노베이션', flow: '500 HHPC → 499 HIPC', status: 'success', time: '6분 전' },
         { hash: '0x1c4a...5f09', type: 'transfer', fromCompany: '올리브영', toCompany: '헥토헬스케어', flow: '2,340 OLIVEPC', status: 'pending', time: '11분 전' },
         { hash: '0x44df...c712', type: 'swap', fromCompany: '헥토헬스케어', toCompany: '헥토이노베이션', flow: '3,000 HHPC → 2,995 HIPC', status: 'success', time: '24분 전' },
-        { hash: '0xe210...9a3b', type: 'swap', fromCompany: '원화 (KRW)', toCompany: '헥토파이낸셜', flow: '1,000 KRW → 998 HFPC', status: 'failed', time: '41분 전' },
+        { hash: '0xe210...9a3b', type: 'swap', fromCompany: '원화 스테이블', toCompany: '헥토파이낸셜', flow: '1,000 KRWC → 998 HFPC', status: 'failed', time: '41분 전' },
       ],
     }
   },

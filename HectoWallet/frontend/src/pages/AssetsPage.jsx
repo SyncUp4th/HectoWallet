@@ -24,7 +24,7 @@ export default function AssetsPage() {
 
       <div className="assets-header">
         <p className="assets-total-label">총 보유자산</p>
-        <p className="assets-total">{data.totalKrw.toLocaleString()} KRW</p>
+        <p className="assets-total">{data.totalKrw.toLocaleString()} 원</p>
         <Link to="/swap" className="assets-swap-cta">
           <i className="ti ti-arrows-exchange" aria-hidden="true"></i> 코인 스왑하기
         </Link>
