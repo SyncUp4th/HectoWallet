@@ -1,15 +1,15 @@
 export const COINS = [
-  { symbol: 'HTC', name: '헥토그룹사 통합' },
-  { symbol: 'HIC', name: '헥토이노베이션' },
-  { symbol: 'HFC', name: '헥토파이낸셜' },
-  { symbol: 'HHC', name: '헥토헬스케어' },
-  { symbol: 'HDC', name: '헥토데이터' },
-  { symbol: 'HMC', name: '헥토미디어' },
-  { symbol: 'OYC', name: '올리브영' },
-  { symbol: 'MUC', name: '무신사' },
+  { symbol: 'USDT', name: 'Tether USD (연동 테스트용)' },
+  { symbol: 'OLIVEPC', name: '올리브영' },
+  { symbol: 'HHPC', name: '헥토헬스케어' },
+  { symbol: 'HIPC', name: '헥토이노베이션' },
+  { symbol: 'HFPC', name: '헥토파이낸셜' },
 ]
 
-export const HECTO_COINS = COINS.filter((c) => c.symbol !== 'OYC' && c.symbol !== 'MUC')
+// The internal 1 coin = 1 SP peg only applies among Hecto's own subsidiary
+// point coins — USDT (test-only, real market value) and OLIVEPC (partner
+// brand point) stay asset-only, same as OYC/MUC were before the rename.
+export const HECTO_COINS = COINS.filter((c) => c.symbol === 'HHPC' || c.symbol === 'HIPC' || c.symbol === 'HFPC')
 
 export function coinName(symbol) {
   return COINS.find((c) => c.symbol === symbol)?.name ?? symbol

@@ -1,7 +1,11 @@
 import { useState } from 'react'
+import { HECTO_COINS } from '../constants/coins.js'
+
+const PEGGED_SYMBOLS = new Set(HECTO_COINS.map((c) => c.symbol))
 
 export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
   const [showToast, setShowToast] = useState(false)
+  const isPegged = PEGGED_SYMBOLS.has(coin.symbol)
 
   function handleCopy(e) {
     e.stopPropagation()
@@ -41,7 +45,9 @@ export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
       </div>
       <div className="wc-body">
         <div className="wc-balance">{coin.balance.toLocaleString()} {coin.symbol}</div>
-        <div className="wc-krw">{coin.balance.toLocaleString()} SP · 1 {coin.symbol} = 1 SP</div>
+        <div className="wc-krw">
+          {isPegged ? `${coin.balance.toLocaleString()} SP · 1 ${coin.symbol} = 1 SP` : '헥토 계열사 SP 페그 대상 아님'}
+        </div>
         <div className="wc-actions">
           <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>보내기</button>
           <button className="wc-actbtn" onClick={(e) => e.stopPropagation()}>받기</button>

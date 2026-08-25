@@ -19,8 +19,8 @@ export default function SwapPage() {
   const { disconnect } = useDisconnect()
   const [walletModalOpen, setWalletModalOpen] = useState(false)
 
-  const [fromSymbol, setFromSymbol] = useState('HFC')
-  const [toSymbol, setToSymbol] = useState('HTC')
+  const [fromSymbol, setFromSymbol] = useState('HFPC')
+  const [toSymbol, setToSymbol] = useState('HIPC')
   const [fromAmount, setFromAmount] = useState(1000)
   const [quote, setQuote] = useState(null)
   const [rates, setRates] = useState([])
@@ -142,9 +142,9 @@ export default function SwapPage() {
 
       <div className="card rate-card">
         <h3>최근 스왑</h3>
-        <div className="mini-row"><span className="hashlink" style={{ fontSize: 12.5 }}>HHC → HTC</span><span className="timeago">24분 전</span></div>
-        <div className="mini-row"><span className="hashlink" style={{ fontSize: 12.5 }}>HMC → HDC</span><span className="timeago">6분 전</span></div>
-        <div className="mini-row" style={{ border: 'none' }}><span className="hashlink" style={{ fontSize: 12.5 }}>HFC → HTC</span><span className="timeago">2분 전</span></div>
+        <div className="mini-row"><span className="hashlink" style={{ fontSize: 12.5 }}>HHPC → HIPC</span><span className="timeago">24분 전</span></div>
+        <div className="mini-row"><span className="hashlink" style={{ fontSize: 12.5 }}>HFPC → HHPC</span><span className="timeago">6분 전</span></div>
+        <div className="mini-row" style={{ border: 'none' }}><span className="hashlink" style={{ fontSize: 12.5 }}>HFPC → HIPC</span><span className="timeago">2분 전</span></div>
       </div>
     </section>
   )

@@ -7,10 +7,10 @@ const now = Math.floor(Date.now() / 1000)
 
 const sampleTransfers = [
   // swap: two legs, same hash, opposite direction, different token
-  { hash: '0xswap', from: ADDR, to: OTHER, value: '1000000000000000000000', tokenDecimal: '18', tokenSymbol: 'HFC', timeStamp: String(now - 120) },
-  { hash: '0xswap', from: OTHER, to: ADDR, value: '998000000000000000000', tokenDecimal: '18', tokenSymbol: 'HTC', timeStamp: String(now - 120) },
+  { hash: '0xswap', from: ADDR, to: OTHER, value: '1000000000000000000000', tokenDecimal: '18', tokenSymbol: 'HFPC', timeStamp: String(now - 120) },
+  { hash: '0xswap', from: OTHER, to: ADDR, value: '998000000000000000000', tokenDecimal: '18', tokenSymbol: 'HIPC', timeStamp: String(now - 120) },
   // plain transfer: single leg
-  { hash: '0xtransfer', from: ADDR, to: OTHER, value: '5000000000000000000000', tokenDecimal: '18', tokenSymbol: 'HTC', timeStamp: String(now - 3600) },
+  { hash: '0xtransfer', from: ADDR, to: OTHER, value: '5000000000000000000000', tokenDecimal: '18', tokenSymbol: 'HIPC', timeStamp: String(now - 3600) },
 ]
 
 const rows = groupIntoTransactions(sampleTransfers, ADDR)
@@ -18,11 +18,11 @@ const rows = groupIntoTransactions(sampleTransfers, ADDR)
 assert.strictEqual(rows.length, 2)
 const swapRow = rows.find((r) => r.hash === '0xswap')
 assert.strictEqual(swapRow.type, 'swap')
-assert.strictEqual(swapRow.flow, '1,000 HFC → 998 HTC')
+assert.strictEqual(swapRow.flow, '1,000 HFPC → 998 HIPC')
 
 const transferRow = rows.find((r) => r.hash === '0xtransfer')
 assert.strictEqual(transferRow.type, 'transfer')
-assert.strictEqual(transferRow.flow, '5,000 HTC')
+assert.strictEqual(transferRow.flow, '5,000 HIPC')
 
 // most recent (swap, 120s ago) sorts before the older transfer (1h ago)
 assert.strictEqual(rows[0].hash, '0xswap')

@@ -16,17 +16,13 @@
   --danger-bg:#F8E7E5;
   --warn:#8A6A16;
   --warn-bg:#F5EBCF;
-  --c-htc:#A8752E; --c-htc-bg:#F3E6CE;
-  --c-hic:#4E7096; --c-hic-bg:#E4EBF1;
-  --c-hfc:#3F7A57; --c-hfc-bg:#E2EFE6;
-  --c-hhc:#9C5B54; --c-hhc-bg:#F1E3E1;
-  --c-hdc:#67588A; --c-hdc-bg:#E9E5F0;
-  --c-hmc:#3A7A78; --c-hmc-bg:#E1EFEE;
-  --c-oyc:#4C8C2E; --c-oyc-bg:#E6EFDD;
-  --c-muc:#3D3D3D; --c-muc-bg:#E7E7E7;
-  --card-htc:#B8863A; --card-hic:#3E5E82; --card-hfc:#2F6B48;
-  --card-hhc:#A6362E; --card-hdc:#5B4A78; --card-hmc:#1F6F6B;
-  --card-oyc:#4F8A2F; --card-muc:#202020;
+  --c-usdt:#1D8B6B; --c-usdt-bg:#DFF0EA;
+  --c-olivepc:#4C8C2E; --c-olivepc-bg:#E6EFDD;
+  --c-hhpc:#9C5B54; --c-hhpc-bg:#F1E3E1;
+  --c-hipc:#4E7096; --c-hipc-bg:#E4EBF1;
+  --c-hfpc:#3F7A57; --c-hfpc-bg:#E2EFE6;
+  --card-usdt:#1BA27A; --card-olivepc:#4F8A2F;
+  --card-hhpc:#A6362E; --card-hipc:#3E5E82; --card-hfpc:#2F6B48;
   --font-ui:"Noto Sans KR",-apple-system,"Malgun Gothic",sans-serif;
   --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   --radius:10px;
@@ -42,14 +38,11 @@
     --success:#5CB985; --success-bg:#1B3327;
     --danger:#E2726C; --danger-bg:#3A2220;
     --warn:#D9B85C; --warn-bg:#3A3018;
-    --c-htc:#D9A85C; --c-htc-bg:#3A2D18;
-    --c-hic:#8FB0D4; --c-hic-bg:#22303F;
-    --c-hfc:#7FC79E; --c-hfc-bg:#1E3327;
-    --c-hhc:#D69A93; --c-hhc-bg:#3A2523;
-    --c-hdc:#AC9FD1; --c-hdc-bg:#2C2740;
-    --c-hmc:#7FC0BE; --c-hmc-bg:#1D3332;
-    --c-oyc:#8FCB6C; --c-oyc-bg:#233420;
-    --c-muc:#C9C9C9; --c-muc-bg:#2A2A2A;
+    --c-usdt:#6ED4B0; --c-usdt-bg:#163A30;
+    --c-olivepc:#8FCB6C; --c-olivepc-bg:#233420;
+    --c-hhpc:#D69A93; --c-hhpc-bg:#3A2523;
+    --c-hipc:#8FB0D4; --c-hipc-bg:#22303F;
+    --c-hfpc:#7FC79E; --c-hfpc-bg:#1E3327;
   }
 }
 :root[data-theme="dark"]{
@@ -60,14 +53,11 @@
   --success:#5CB985; --success-bg:#1B3327;
   --danger:#E2726C; --danger-bg:#3A2220;
   --warn:#D9B85C; --warn-bg:#3A3018;
-  --c-htc:#D9A85C; --c-htc-bg:#3A2D18;
-  --c-hic:#8FB0D4; --c-hic-bg:#22303F;
-  --c-hfc:#7FC79E; --c-hfc-bg:#1E3327;
-  --c-hhc:#D69A93; --c-hhc-bg:#3A2523;
-  --c-hdc:#AC9FD1; --c-hdc-bg:#2C2740;
-  --c-hmc:#7FC0BE; --c-hmc-bg:#1D3332;
-  --c-oyc:#8FCB6C; --c-oyc-bg:#233420;
-  --c-muc:#C9C9C9; --c-muc-bg:#2A2A2A;
+  --c-usdt:#6ED4B0; --c-usdt-bg:#163A30;
+  --c-olivepc:#8FCB6C; --c-olivepc-bg:#233420;
+  --c-hhpc:#D69A93; --c-hhpc-bg:#3A2523;
+  --c-hipc:#8FB0D4; --c-hipc-bg:#22303F;
+  --c-hfpc:#7FC79E; --c-hfpc-bg:#1E3327;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
