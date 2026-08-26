@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { PEGGED_SYMBOLS } from '../constants/coins.js'
 import { computeSwapQuote } from '../lib/swapMath.js'
-import { getSwapContractConfig } from '../config.js'
 import { executeSwap, quoteSwapOnChain } from '../services/swapService.js'
 import { logError } from '../lib/logger.js'
 
@@ -25,13 +24,9 @@ swapRouter.post('/quote', async (req, res) => {
   }
 })
 
-swapRouter.get('/contract-config', (req, res) => {
-  res.json(getSwapContractConfig())
-})
-
-// Custodial swap: treasury wallet signs on behalf of the company.
+// The operator wallet signs on behalf of the company (custodial model).
 // Body: { fromSymbol, toSymbol, fromAmount }
-// Returns: { txHash, fromSymbol, toSymbol, fromAmount, toAmount, status, explorerUrl }
+// Returns: { txHash, fromSymbol, toSymbol, fromAmount, toAmount, hops, status, explorerUrl }
 swapRouter.post('/execute', async (req, res) => {
   const { fromSymbol, toSymbol, fromAmount } = req.body ?? {}
   try {

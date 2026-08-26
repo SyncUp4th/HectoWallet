@@ -1,4 +1,4 @@
-import { getTreasuryAddress } from '../config.js'
+import { getOperatorAddress } from '../config.js'
 import { groupIntoTransactions } from '../lib/txGrouping.js'
 import { log, logError } from '../lib/logger.js'
 
@@ -6,7 +6,7 @@ const SEPOLIA_CHAIN_ID = 11155111
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export async function getTransactions() {
-  const address = getTreasuryAddress()
+  const address = getOperatorAddress()
   const apiKey = process.env.ETHERSCAN_API_KEY
   const emptyStats = { todayCount: 0, volume24h: 0, activeWallets: 0, lastSyncBlock: 0 }
 

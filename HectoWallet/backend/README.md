@@ -19,19 +19,31 @@ coin with `balance: 0`) so the frontend can show a "not wired up yet" state.
 | Variable | Unlocks | Get it from |
 |---|---|---|
 | `SEPOLIA_RPC_URL` | Reliable on-chain balance reads (falls back to a public RPC without it) | infura.io / alchemy.com, free tier |
-| `TREASURY_ADDRESS` | Which wallet's balances/history to show — this is a public address, not a secret | your own treasury wallet |
-| `TOKEN_ADDRESS_*` (5 of these) | Per-coin balance reads | your deployed ERC20 contracts |
+| `OPERATOR_PRIVATE_KEY` | Signing swaps, and the wallet address the app shows (derived from the key) | generated for this app — see `.env.example` |
+| `TOKEN_ADDRESS_*` (5 of these) | Per-coin balance reads and swap routing | your deployed ERC20 contracts |
 | `ETHERSCAN_API_KEY` | Real transaction history in the 거래내역 tab | etherscan.io/apis, free self-serve signup |
-| `SWAP_CONTRACT_ADDRESS` + `src/chain/swapAbi.json` | Serves the swap contract's address/ABI at `/api/swap/contract-config` — currently unused by the frontend (swap is a local simulation now), kept for a future on-chain-swap page | your deployed swap contract |
 
 `/api/store/products` is mock-only (`src/services/storeService.js`) — same
 status as `/api/settlement`, no real inventory backing it.
 
-This backend never holds a private key or signs anything — swap execution
-happens in the user's own wallet (MetaMask etc.) against the contract this
-API points it at. A treasury mnemonic would only be needed for a future
-real "보내기" (send) endpoint, and even then belongs in an env var / secrets
-manager, never in source — this repo is public.
+## Two wallets, two roles
+
+- **Issuer EOA** — minted the tokens and seeded the Uniswap pools. Its key is
+  *not* used by this backend and must never be stored in this repo.
+- **Operator EOA** — this app's own wallet. `OPERATOR_PRIVATE_KEY` signs its
+  swaps, and `getOperatorAddress()` derives the address from that same key so
+  the two can't drift apart. Fund it with Sepolia ETH for gas plus the tokens
+  it should hold.
+
+## Swap execution
+
+Swaps run against the real Uniswap V3 deployment on Sepolia — no custom
+contract. Only `X-USDT` pools exist (all at the 0.01% fee tier), so USDT is
+the routing hub: `USDT ↔ X` swaps direct, and `X ↔ Y` hops through USDT
+(`HFPC → USDT → HIPC`). Addresses and the fee tier are constants in
+`src/chain/uniswap.js`; `POST /api/swap/quote` reads the live pool price via
+QuoterV2 and `POST /api/swap/execute` approves the router once, then calls
+`exactInput` with a 0.50% slippage floor.
 
 ## Deploying to Vercel
 

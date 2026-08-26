@@ -17,7 +17,6 @@ export const httpApi = {
   getRates: () => request('/api/swap/rates'),
   quoteSwap: (body) => request('/api/swap/quote', { method: 'POST', body: JSON.stringify(body) }),
   executeSwap: (body) => request('/api/swap/execute', { method: 'POST', body: JSON.stringify(body) }),
-  getSwapContractConfig: () => request('/api/swap/contract-config'),
   getTransactions: (params = {}) => request(`/api/transactions?${new URLSearchParams(params)}`),
   getSettlement: (period) => request(`/api/settlement?period=${encodeURIComponent(period ?? '')}`),
   getStoreProducts: () => request('/api/store/products'),

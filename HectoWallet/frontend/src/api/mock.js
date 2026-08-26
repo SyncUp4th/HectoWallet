@@ -45,11 +45,6 @@ export const mockApi = {
     }
   },
 
-  async getSwapContractConfig() {
-    await delay(100)
-    return { address: null, abi: [], chainId: 11155111, configured: false }
-  },
-
   async getTransactions() {
     await delay()
     return {

@@ -1,5 +1,5 @@
 import { publicClient } from '../chain/publicClient.js'
-import { getWalletClient, getTreasuryAccount } from '../chain/walletClient.js'
+import { getWalletClient, getOperatorAccount } from '../chain/walletClient.js'
 import { ERC20_ABI } from '../chain/erc20Abi.js'
 import {
   SWAP_ROUTER_02, QUOTER_V2, POOL_FEE, HUB_SYMBOL,
@@ -62,8 +62,8 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
   if (!fromAmount || fromAmount <= 0) throw new Error('수량이 유효하지 않습니다')
 
   const walletClient = getWalletClient()
-  const account = getTreasuryAccount()
-  if (!walletClient || !account) throw new Error('TREASURY_PRIVATE_KEY가 설정되지 않아 스왑을 실행할 수 없습니다')
+  const account = getOperatorAccount()
+  if (!walletClient || !account) throw new Error('OPERATOR_PRIVATE_KEY가 설정되지 않아 스왑을 실행할 수 없습니다')
 
   const { from, to, route, path } = resolveAddresses(fromSymbol, toSymbol)
   const { wei: amountInWei } = await toBaseUnits(from, fromAmount)
