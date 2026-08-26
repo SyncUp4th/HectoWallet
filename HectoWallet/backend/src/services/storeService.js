@@ -14,20 +14,41 @@ function merchantAddress() {
   return process.env.STORE_MERCHANT_ADDRESS || null
 }
 
-// Store is mock-only, same as settlement. Desimone (드시모네) is priced in
-// HHPC since it's a Hecto Healthcare-affiliated brand for this demo.
+// Catalog mirrors desimone.co.kr — a subset, not the full 35 SKUs. Prices are
+// the real KRW figures used as-is: every coin is pegged 1:1 to KRW, so the
+// won price and the HHPC price are the same number.
+// ponytail: static list, no real inventory behind it — same status as
+// settlement. Swap for the real product API when there is one.
+const CATEGORIES = [
+  { id: 'all', label: '전체' },
+  { id: 'promo', label: '프로모션 세트' },
+  { id: 'premium', label: '프리미엄 라인' },
+  { id: 'basic', label: '베이직 라인' },
+]
+
 const PRODUCTS = [
-  { id: 'dsm-01', name: '드시모네 오리지널 유산균', description: '이탈리아 정통 유산균 De Simone Formulation', priceHhpc: 15000 },
-  { id: 'dsm-02', name: '드시모네 키즈 유산균', description: '어린이용 저용량 포뮬러', priceHhpc: 18000 },
-  { id: 'dsm-03', name: '드시모네 멀티비타민', description: '유산균과 함께 먹는 종합비타민', priceHhpc: 12000 },
-  { id: 'dsm-04', name: '드시모네 콜라겐 스틱', description: '저분자 콜라겐 + 유산균 스틱', priceHhpc: 22000 },
+  { id: 'dsm-1200-2box', category: 'promo', name: '드시모네 1200 (60포) 2BOX', tags: ['4개월분', '아연', '비타민D'], listPriceHhpc: 296000, priceHhpc: 192400, rating: 4.9, reviews: 710, badge: '드시모네몰 단독' },
+  { id: 'dsm-2000-2box', category: 'promo', name: '드시모네 2000 2BOX', tags: ['보장균수 2,000억'], listPriceHhpc: 256000, priceHhpc: 179200, rating: 4.8, reviews: 1672 },
+  { id: 'dsm-kids-blue-2box', category: 'promo', name: '드시모네 키즈 프리미엄 블루베리향 2BOX', tags: ['키즈 유산균 보장균수 1위'], listPriceHhpc: 196000, priceHhpc: 137200, rating: 4.7, reviews: 351, badge: '드시모네몰 단독' },
+  { id: 'dsm-baby-step1-3box', category: 'promo', name: '드시모네 베이비 스텝1 3BOX', tags: ['모유ㆍ분유 수유 아기'], listPriceHhpc: 114000, priceHhpc: 79800, rating: 4.9, reviews: 1204 },
+
+  { id: 'dsm-4500', category: 'premium', name: '드시모네 4500 (30포)', tags: ['보장균수 4,500억'], listPriceHhpc: 168000, priceHhpc: 142800, rating: 4.9, reviews: 5179 },
+  { id: 'dsm-2000', category: 'premium', name: '드시모네 2000 (30포)', tags: ['보장균수 2,000억'], priceHhpc: 128000, rating: 4.8, reviews: 1077 },
+  { id: 'dsm-kids-basic', category: 'premium', name: '드시모네 키즈 프리미엄 기본향 (30포)', tags: ['키즈 유산균 보장균수 1위'], priceHhpc: 98000, rating: 4.8, reviews: 544 },
+
+  { id: 'dsm-caps-plus', category: 'basic', name: '드시모네 캡슐 플러스 (60캡슐)', tags: ['보장균수 1,000억'], priceHhpc: 98000, rating: 4.8, reviews: 157 },
+  { id: 'dsm-365-caps', category: 'basic', name: '드시모네 365 캡슐 (30캡슐)', tags: [], priceHhpc: 48000, rating: 4.9, reviews: 790 },
+  { id: 'dsm-kids-yogurt', category: 'basic', name: '드시모네 키즈 요거트 플레인 (3개입)', tags: [], priceHhpc: 12000, rating: 4.9, reviews: 102 },
 ]
 
 export function getStoreProducts() {
   return {
     brand: '드시모네',
+    brandTagline: '국내 1위 보장균수',
+    brandSub: '보장균수 4,500억의 능력',
     currency: STORE_CURRENCY,
     merchantAddress: merchantAddress(),
+    categories: CATEGORIES,
     products: PRODUCTS,
   }
 }
@@ -48,6 +69,7 @@ async function balanceOf(symbol, holder) {
 export async function purchaseProduct(productId) {
   const product = PRODUCTS.find((p) => p.id === productId)
   if (!product) throw new Error('상품을 찾을 수 없습니다')
+  if (product.soldOut) throw new Error('품절된 상품입니다')
 
   const operator = getOperatorAddress()
   if (!operator) throw new Error('운영 지갑이 설정되지 않았습니다')

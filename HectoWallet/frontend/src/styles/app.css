@@ -259,7 +259,54 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .storecard-price{font-family:var(--font-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
 .storecard-buy{padding:8px 14px;border:none;border-radius:9px;background:var(--accent);color:var(--surface);font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0}
 .storecard-buy:disabled{opacity:0.6;cursor:not-allowed}
-.storecard-result{font-size:11.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:8px;padding:7px 9px;margin:10px 0 0;line-height:1.6}
-.storecard-error{font-size:11.5px;color:var(--danger);margin:10px 0 0;line-height:1.5}
 .store-note{font-size:11px;color:var(--ink-mute);margin:1.25rem 0 0;line-height:1.6}
 .store-note code{font-family:var(--font-mono);font-size:10.5px;word-break:break-all}
+
+/* --- Desimone mall layout (mirrors desimone.co.kr) --- */
+.storepanel{padding-top:0}
+.mallhero{position:relative;margin:0 0 1rem;padding:1.1rem 0 0}
+.mallhero-tag{font-size:11.5px;font-weight:700;color:var(--accent);margin:0 0 4px}
+.mallhero-title{font-size:26px;font-weight:800;letter-spacing:-0.02em;margin:0 0 4px;color:var(--ink)}
+.mallhero-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 12px}
+.mallhero-art{height:110px;border-radius:14px;background:linear-gradient(135deg,#dff1fb 0%,#eaf6fd 45%,#cfe9f7 100%)}
+
+.mallbalance{display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:1rem;font-size:12.5px;color:var(--ink-soft)}
+.mallbalance span:last-child{font-family:var(--font-mono);color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+.malltabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:12px;scrollbar-width:none}
+.malltabs::-webkit-scrollbar{display:none}
+.malltab{flex-shrink:0;background:none;border:none;padding:9px 12px;font-size:13px;color:var(--ink-mute);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.malltab.active{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+
+.mallsorts{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+.mallsorts::-webkit-scrollbar{display:none}
+.mallsort{flex-shrink:0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink-soft);cursor:pointer}
+.mallsort.active{background:var(--ink);border-color:var(--ink);color:var(--surface);font-weight:600}
+
+.mallcount{font-size:12px;color:var(--ink-soft);margin:0 0 10px}
+
+.mallgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 10px}
+.mallcard{min-width:0}
+.mallcard-thumb{position:relative;aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:38px;color:#7fa8c4;margin-bottom:8px;overflow:hidden}
+.mallcard-thumb.cat-promo{background:linear-gradient(140deg,#e4f2fb,#f2f8fc)}
+.mallcard-thumb.cat-premium{background:linear-gradient(140deg,#e8ecfb,#f4f6fd)}
+.mallcard-thumb.cat-basic{background:linear-gradient(140deg,#eaf5ee,#f5faf7)}
+.mallcard-badge{position:absolute;top:7px;left:7px;background:rgba(20,32,44,0.82);color:#fff;font-size:9.5px;font-weight:600;padding:3px 6px;border-radius:5px;letter-spacing:-0.01em}
+.mallcard-sold{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,32,44,0.55);color:#fff;font-size:12px;font-weight:700;letter-spacing:0.06em}
+
+.mallcard-buy{width:100%;background:var(--surface);border:0.5px solid var(--border-strong);border-radius:8px;padding:7px 0;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px}
+.mallcard-buy:hover:not(:disabled){background:var(--surface-2)}
+.mallcard-buy:disabled{color:var(--ink-mute);cursor:not-allowed;background:var(--surface-2)}
+
+.mallcard-tags{font-size:10.5px;color:var(--ink-mute);margin:0 0 3px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mallcard-name{font-size:12.5px;font-weight:600;line-height:1.4;margin:0 0 6px;color:var(--ink)}
+.mallcard-list{font-size:11px;color:var(--ink-mute);text-decoration:line-through;margin:0 0 2px;font-variant-numeric:tabular-nums}
+.mallcard-price{font-size:12px;color:var(--ink-soft);margin:0;display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.mallcard-price strong{font-size:15px;font-weight:800;color:var(--ink)}
+.mallcard-off{color:var(--danger);font-weight:800;font-size:14px}
+.mallcard-rating{font-size:11px;color:var(--ink-soft);margin:5px 0 0;display:flex;align-items:center;gap:3px}
+.mallcard-rating i{color:#f5a623;font-size:11px}
+.mallcard-rating span{color:var(--ink-mute)}
+
+.mallcard-result{font-size:10.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:7px;padding:6px 7px;margin:7px 0 0;line-height:1.5}
+.mallcard-err{font-size:10.5px;color:var(--danger);margin:7px 0 0;line-height:1.5}
