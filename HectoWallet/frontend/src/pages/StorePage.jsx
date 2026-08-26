@@ -73,13 +73,8 @@ export default function StorePage() {
   }
 
   return (
-    <section className="panel storepanel">
-      <div className="mallhero">
-        <p className="mallhero-tag">{data.brandTagline}</p>
-        <h2 className="mallhero-title">De Simone</h2>
-        <p className="mallhero-sub">{data.brandSub}</p>
-        <div className="mallhero-art" aria-hidden="true"></div>
-      </div>
+    <section className="panel">
+      <h2 className="pagetitle">{data.brand}</h2>
 
       <div className="mallbalance">
         <span>{label} 보유 자산</span>
@@ -176,12 +171,6 @@ export default function StorePage() {
         })}
       </div>
 
-      {data.merchantAddress && (
-        <p className="store-note">
-          결제 대금은 {label}로 판매자 주소 <code>{data.merchantAddress}</code>로 실제 전송됩니다.
-          1 {label} = 1 원 페그이므로 표시 금액과 원화 가격이 같습니다.
-        </p>
-      )}
     </section>
   )
 }

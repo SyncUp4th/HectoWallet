@@ -1,5 +1,4 @@
 import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom'
-import { COINS, displaySymbol } from './constants/coins.js'
 import AssetsPage from './pages/AssetsPage.jsx'
 import SwapPage from './pages/SwapPage.jsx'
 import ExplorerPage from './pages/ExplorerPage.jsx'
@@ -25,17 +24,6 @@ function MobileShell() {
         <div className="brand">
           <div className="brand-mark">H</div>
           <div className="brand-name">HectoWallet</div>
-        </div>
-        <div className="ticker-legend">
-          {COINS.map((c) => (
-            <span
-              key={c.symbol}
-              className="tick"
-              style={{ background: `var(--c-${c.symbol.toLowerCase()}-bg)`, color: `var(--c-${c.symbol.toLowerCase()})` }}
-            >
-              {displaySymbol(c.symbol)}
-            </span>
-          ))}
         </div>
       </div>
 

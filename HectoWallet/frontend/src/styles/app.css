@@ -76,12 +76,9 @@ button,input,select{font-size:16px}
 }
 
 .topbar{padding:0.75rem 0 0.9rem}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:0.7rem}
+.brand{display:flex;align-items:center;gap:10px}
 .brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--surface);font-weight:700;font-size:14px;font-family:var(--font-mono)}
 .brand-name{font-weight:700;font-size:17px;letter-spacing:-0.01em}
-.ticker-legend{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.ticker-legend::-webkit-scrollbar{display:none}
-.tick{flex:0 0 auto;font-family:var(--font-mono);font-size:11px;font-weight:500;padding:4px 9px;border-radius:100px}
 
 h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 
@@ -247,29 +244,7 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .ledgerrow-amt{font-family:var(--font-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
 .ledgerrow-amt small{font-weight:400;color:var(--ink-soft);margin-left:6px}
 
-/* ---- Store ---- */
-.store-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 1.25rem;line-height:1.6}
-.storelist{display:flex;flex-direction:column;gap:10px}
-.storecard{display:flex;gap:12px;background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:14px}
-.storecard-icon{width:44px;height:44px;border-radius:12px;background:var(--c-hhpc-bg);color:var(--c-hhpc);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.storecard-body{flex:1;min-width:0}
-.storecard-name{font-size:14px;font-weight:700;margin-bottom:2px}
-.storecard-desc{font-size:12px;color:var(--ink-soft);margin-bottom:10px}
-.storecard-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.storecard-price{font-family:var(--font-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
-.storecard-buy{padding:8px 14px;border:none;border-radius:9px;background:var(--accent);color:var(--surface);font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0}
-.storecard-buy:disabled{opacity:0.6;cursor:not-allowed}
-.store-note{font-size:11px;color:var(--ink-mute);margin:1.25rem 0 0;line-height:1.6}
-.store-note code{font-family:var(--font-mono);font-size:10.5px;word-break:break-all}
-
-/* --- Desimone mall layout (mirrors desimone.co.kr) --- */
-.storepanel{padding-top:0}
-.mallhero{position:relative;margin:0 0 1rem;padding:1.1rem 0 0}
-.mallhero-tag{font-size:11.5px;font-weight:700;color:var(--accent);margin:0 0 4px}
-.mallhero-title{font-size:26px;font-weight:800;letter-spacing:-0.02em;margin:0 0 4px;color:var(--ink)}
-.mallhero-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 12px}
-.mallhero-art{height:110px;border-radius:14px;background:linear-gradient(135deg,#dff1fb 0%,#eaf6fd 45%,#cfe9f7 100%)}
-
+/* ---- Store: Desimone mall layout (mirrors desimone.co.kr) ---- */
 .mallbalance{display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:1rem;font-size:12.5px;color:var(--ink-soft)}
 .mallbalance span:last-child{font-family:var(--font-mono);color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 

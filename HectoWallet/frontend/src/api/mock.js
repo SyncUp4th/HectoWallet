@@ -63,8 +63,6 @@ export const mockApi = {
     await delay()
     return {
       brand: '드시모네',
-      brandTagline: '국내 1위 보장균수',
-      brandSub: '보장균수 4,500억의 능력',
       currency: 'HHPC',
       merchantAddress: null,
       categories: [
