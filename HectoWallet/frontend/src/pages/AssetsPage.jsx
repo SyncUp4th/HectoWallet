@@ -4,6 +4,28 @@ import { api } from '../api/index.js'
 import { useApiData } from '../hooks/useApiData.js'
 import WalletCard from '../components/WalletCard.jsx'
 
+function WalletAddressBar({ address }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    navigator.clipboard?.writeText(address).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1600)
+  }
+
+  return (
+    <div className="walletbar">
+      <div className="walletbar-info">
+        <span className="walletbar-label">내 지갑 주소</span>
+        <span className="walletbar-addr" title={address}>{address}</span>
+      </div>
+      <button type="button" className="walletbar-copy" onClick={handleCopy} aria-label="지갑 주소 복사">
+        <i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} aria-hidden="true"></i>
+      </button>
+    </div>
+  )
+}
+
 export default function AssetsPage() {
   const { data, error, retry } = useApiData(() => api.getAssets())
   const [expanded, setExpanded] = useState(null)
@@ -21,6 +43,8 @@ export default function AssetsPage() {
   return (
     <section className="panel">
       <h2 className="pagetitle">지갑 자산</h2>
+
+      {data.walletAddress && <WalletAddressBar address={data.walletAddress} />}
 
       <div className="assets-header">
         <p className="assets-total-label">총 보유자산</p>

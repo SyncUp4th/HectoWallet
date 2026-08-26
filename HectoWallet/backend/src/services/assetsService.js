@@ -30,5 +30,5 @@ export async function getAssets() {
   )
 
   const totalKrw = coins.reduce((sum, c) => sum + c.balance, 0)
-  return { totalKrw, coins }
+  return { totalKrw, coins, walletAddress: treasury }
 }

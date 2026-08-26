@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "selfcheck": "node src/lib/swapMath.selfcheck.mjs && node src/lib/txGrouping.selfcheck.mjs"
+    "selfcheck": "node src/lib/swapMath.selfcheck.mjs && node src/lib/txGrouping.selfcheck.mjs && node src/chain/uniswap.selfcheck.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",

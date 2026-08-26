@@ -1,105 +1,99 @@
 import { publicClient } from '../chain/publicClient.js'
 import { getWalletClient, getTreasuryAccount } from '../chain/walletClient.js'
 import { ERC20_ABI } from '../chain/erc20Abi.js'
-import { getTokenAddress, getSwapContractConfig } from '../config.js'
-import { computeSwapQuote } from '../lib/swapMath.js'
+import {
+  SWAP_ROUTER_02, QUOTER_V2, POOL_FEE, HUB_SYMBOL,
+  SWAP_ROUTER_ABI, QUOTER_V2_ABI, encodePath, buildRoute,
+} from '../chain/uniswap.js'
+import { getTokenAddress } from '../config.js'
 import { PEGGED_SYMBOLS } from '../constants/coins.js'
 import { log, logError } from '../lib/logger.js'
 
-const SEPOLIA_CHAIN_ID = 11155111
+// Uniswap quotes already price in the pool fee, so the only extra guard the
+// swap needs is slippage — how far below the quote we still accept.
+const SLIPPAGE_BPS = 50n // 0.50%
+const MAX_UINT256 = 2n ** 256n - 1n
 
-// Try to auto-fetch ABI from Etherscan if swapAbi.json is still empty and
-// the contract is Etherscan-verified. Cached in memory per process lifetime.
-let _cachedSwapAbi = null
-async function resolveSwapAbi(contractAddress, fallbackAbi) {
-  if (fallbackAbi.length > 0) return fallbackAbi
-  if (_cachedSwapAbi) return _cachedSwapAbi
+function resolveAddresses(fromSymbol, toSymbol) {
+  if (!PEGGED_SYMBOLS.includes(fromSymbol)) throw new Error(`알 수 없는 코인: ${fromSymbol}`)
+  if (!PEGGED_SYMBOLS.includes(toSymbol)) throw new Error(`알 수 없는 코인: ${toSymbol}`)
+  if (fromSymbol === toSymbol) throw new Error('같은 코인끼리는 스왑할 수 없습니다')
 
-  const apiKey = process.env.ETHERSCAN_API_KEY
-  if (!apiKey) return []
+  const from = getTokenAddress(fromSymbol)
+  const to = getTokenAddress(toSymbol)
+  const hub = getTokenAddress(HUB_SYMBOL)
+  if (!from) throw new Error(`TOKEN_ADDRESS_${fromSymbol}가 설정되지 않았습니다`)
+  if (!to) throw new Error(`TOKEN_ADDRESS_${toSymbol}가 설정되지 않았습니다`)
+  if (!hub) throw new Error(`TOKEN_ADDRESS_${HUB_SYMBOL}가 설정되지 않았습니다`)
 
-  try {
-    const url = `https://api.etherscan.io/v2/api?chainid=${SEPOLIA_CHAIN_ID}&module=contract&action=getabi&address=${contractAddress}&apikey=${apiKey}`
-    const res = await fetch(url)
-    const json = await res.json()
-    if (json.status === '1') {
-      _cachedSwapAbi = JSON.parse(json.result)
-      log('etherscan', 'Fetched swap contract ABI', { functions: _cachedSwapAbi.filter((x) => x.type === 'function').map((x) => x.name) })
-      return _cachedSwapAbi
-    }
-    log('etherscan', 'Swap contract ABI not available', { message: json.message })
-  } catch (err) {
-    logError('etherscan', 'Failed to fetch swap ABI', err)
+  const route = buildRoute(from, to, hub)
+  const path = encodePath(route, Array(route.length - 1).fill(POOL_FEE))
+  return { from, to, route, path }
+}
+
+async function toBaseUnits(tokenAddress, amount) {
+  const decimals = await publicClient.readContract({ address: tokenAddress, abi: ERC20_ABI, functionName: 'decimals' })
+  return { wei: BigInt(amount) * 10n ** BigInt(decimals), decimals }
+}
+
+export async function quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount }) {
+  const { from, to, path } = resolveAddresses(fromSymbol, toSymbol)
+  const { wei: amountInWei } = await toBaseUnits(from, fromAmount)
+
+  // quoteExactInput is nonpayable by ABI but never actually written to chain —
+  // simulate it to read the return value without sending a transaction.
+  const { result } = await publicClient.simulateContract({
+    address: QUOTER_V2,
+    abi: QUOTER_V2_ABI,
+    functionName: 'quoteExactInput',
+    args: [path, amountInWei],
+  })
+  const [amountOutWei] = result
+  const toDecimals = await publicClient.readContract({ address: to, abi: ERC20_ABI, functionName: 'decimals' })
+
+  return {
+    amountOutWei,
+    toAmount: Number(amountOutWei / 10n ** BigInt(toDecimals)),
+    amountInWei,
   }
-  return []
 }
 
 export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
-  if (!PEGGED_SYMBOLS.includes(fromSymbol)) throw new Error(`알 수 없는 fromSymbol: ${fromSymbol}`)
-  if (!PEGGED_SYMBOLS.includes(toSymbol)) throw new Error(`알 수 없는 toSymbol: ${toSymbol}`)
-  if (fromSymbol === toSymbol) throw new Error('같은 코인끼리 스왑할 수 없습니다')
   if (!fromAmount || fromAmount <= 0) throw new Error('수량이 유효하지 않습니다')
 
   const walletClient = getWalletClient()
-  if (!walletClient) throw new Error('TREASURY_PRIVATE_KEY 또는 TREASURY_MNEMONIC이 .env에 설정되지 않았습니다')
-
   const account = getTreasuryAccount()
-  const { address: swapContract, abi: rawAbi, configured } = getSwapContractConfig()
-  if (!swapContract) throw new Error('SWAP_CONTRACT_ADDRESS가 .env에 설정되지 않았습니다')
+  if (!walletClient || !account) throw new Error('TREASURY_PRIVATE_KEY가 설정되지 않아 스왑을 실행할 수 없습니다')
 
-  const fromAddress = getTokenAddress(fromSymbol)
-  const toAddress = getTokenAddress(toSymbol)
-  if (!fromAddress) throw new Error(`TOKEN_ADDRESS_${fromSymbol}가 .env에 설정되지 않았습니다`)
-  if (!toAddress) throw new Error(`TOKEN_ADDRESS_${toSymbol}가 .env에 설정되지 않았습니다`)
+  const { from, to, route, path } = resolveAddresses(fromSymbol, toSymbol)
+  const { wei: amountInWei } = await toBaseUnits(from, fromAmount)
 
-  // Resolve ABI — file first, then Etherscan auto-fetch
-  const swapAbi = await resolveSwapAbi(swapContract, rawAbi)
-  if (swapAbi.length === 0) {
-    throw new Error('스왑 컨트랙트 ABI를 찾을 수 없습니다. src/chain/swapAbi.json에 ABI를 직접 입력하거나, Etherscan에서 컨트랙트를 Verify해 주세요.')
-  }
-
-  // Get decimals for the from-token to build the wei amount
-  const fromDecimals = await publicClient.readContract({
-    address: fromAddress,
-    abi: ERC20_ABI,
-    functionName: 'decimals',
+  const balance = await publicClient.readContract({
+    address: from, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address],
   })
-  const fromAmountWei = BigInt(fromAmount) * 10n ** BigInt(fromDecimals)
+  if (balance < amountInWei) throw new Error(`${fromSymbol} 잔액이 부족합니다`)
 
-  // Ensure swap contract has ERC20 allowance to pull fromToken from treasury
+  const { amountOutWei, toAmount } = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount })
+  const amountOutMinimum = (amountOutWei * (10_000n - SLIPPAGE_BPS)) / 10_000n
+
   const allowance = await publicClient.readContract({
-    address: fromAddress,
-    abi: ERC20_ABI,
-    functionName: 'allowance',
-    args: [account.address, swapContract],
+    address: from, abi: ERC20_ABI, functionName: 'allowance', args: [account.address, SWAP_ROUTER_02],
   })
-
-  if (allowance < fromAmountWei) {
-    log('swap', `Approving ${fromSymbol} spend`, { spender: swapContract, amount: fromAmountWei.toString() })
-    const approveTxHash = await walletClient.writeContract({
-      address: fromAddress,
-      abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [swapContract, fromAmountWei],
+  if (allowance < amountInWei) {
+    log('swap', `Approving ${fromSymbol} for router`, { spender: SWAP_ROUTER_02 })
+    const approveHash = await walletClient.writeContract({
+      address: from, abi: ERC20_ABI, functionName: 'approve', args: [SWAP_ROUTER_02, MAX_UINT256],
     })
-    // Wait for approve to confirm before the swap call
-    await publicClient.waitForTransactionReceipt({ hash: approveTxHash, timeout: 60_000 })
-    log('swap', 'Approve confirmed', { approveTxHash })
+    await publicClient.waitForTransactionReceipt({ hash: approveHash, timeout: 120_000 })
+    log('swap', 'Approve confirmed', { approveHash })
   }
 
-  // Compute expected output using the same fee math as the frontend
-  const quote = computeSwapQuote(fromAmount)
-
-  log('swap', 'Executing swap', { fromSymbol, toSymbol, fromAmount, fromAddress, toAddress })
-  // Fire the swap — return tx hash immediately so the HTTP response doesn't
-  // time out while waiting for a block. The frontend links to Etherscan to track.
-  // ponytail: fire-and-forget pattern; add waitForTransactionReceipt + push
-  //   notification if you need confirmed-status feedback in the UI.
+  log('swap', 'Executing Uniswap V3 swap', { fromSymbol, toSymbol, fromAmount, hops: route.length - 1 })
   const txHash = await walletClient.writeContract({
-    address: swapContract,
-    abi: swapAbi,
-    functionName: 'swap',
-    args: [fromAddress, toAddress, fromAmountWei],
+    address: SWAP_ROUTER_02,
+    abi: SWAP_ROUTER_ABI,
+    functionName: 'exactInput',
+    args: [{ path, recipient: account.address, amountIn: amountInWei, amountOutMinimum }],
   })
 
   log('swap', 'Swap tx submitted', { txHash })
@@ -108,7 +102,8 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
     fromSymbol,
     toSymbol,
     fromAmount,
-    toAmount: quote.toAmount,
+    toAmount,
+    hops: route.length - 1,
     status: 'submitted',
     explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}`,
   }

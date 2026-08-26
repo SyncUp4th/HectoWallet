@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { PEGGED_SYMBOLS } from '../constants/coins.js'
 import { computeSwapQuote } from '../lib/swapMath.js'
 import { getSwapContractConfig } from '../config.js'
-import { executeSwap } from '../services/swapService.js'
+import { executeSwap, quoteSwapOnChain } from '../services/swapService.js'
 import { logError } from '../lib/logger.js'
 
 export const swapRouter = Router()
@@ -11,8 +11,18 @@ swapRouter.get('/rates', (req, res) => {
   res.json({ base: 'KRW', rates: PEGGED_SYMBOLS.map((symbol) => ({ symbol, rate: 1 })) })
 })
 
-swapRouter.post('/quote', (req, res) => {
-  res.json(computeSwapQuote(req.body?.fromAmount))
+// Quote from the live Uniswap pool, falling back to the flat-fee estimate
+// when the chain is unreachable so the UI still shows a number.
+swapRouter.post('/quote', async (req, res) => {
+  const { fromSymbol, toSymbol, fromAmount } = req.body ?? {}
+  const fallback = computeSwapQuote(fromAmount)
+  try {
+    const { toAmount } = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount: Number(fromAmount) })
+    res.json({ ...fallback, toAmount, minReceived: Math.floor(toAmount * 0.995), source: 'uniswap' })
+  } catch (err) {
+    logError('swap', 'on-chain quote failed, using flat-fee estimate', err)
+    res.json({ ...fallback, source: 'estimate' })
+  }
 })
 
 swapRouter.get('/contract-config', (req, res) => {

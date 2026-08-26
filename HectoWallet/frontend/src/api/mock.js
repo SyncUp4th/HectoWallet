@@ -17,7 +17,7 @@ export const mockApi = {
   async getAssets() {
     await delay()
     const totalKrw = ASSETS.reduce((sum, a) => sum + a.balance, 0)
-    return { totalKrw, coins: ASSETS }
+    return { totalKrw, coins: ASSETS, walletAddress: '0x097b8174E0D80fF227176EfF1E14BCefc9513B0B' }
   },
 
   async getRates() {
