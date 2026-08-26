@@ -14,13 +14,20 @@ swapRouter.get('/rates', (req, res) => {
 // when the chain is unreachable so the UI still shows a number.
 swapRouter.post('/quote', async (req, res) => {
   const { fromSymbol, toSymbol, fromAmount } = req.body ?? {}
-  const fallback = computeSwapQuote(fromAmount)
   try {
-    const { toAmount } = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount: Number(fromAmount) })
-    res.json({ ...fallback, toAmount, minReceived: Math.floor(toAmount * 0.995), source: 'uniswap' })
+    const q = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount: Number(fromAmount) })
+    res.json({
+      toAmount: q.toAmount,
+      minReceived: q.minReceived,
+      feeRate: q.feeRate,
+      priceImpact: q.priceImpact,
+      hops: q.hops,
+      slippageTolerance: q.slippageTolerance,
+      source: 'uniswap',
+    })
   } catch (err) {
     logError('swap', 'on-chain quote failed, using flat-fee estimate', err)
-    res.json({ ...fallback, source: 'estimate' })
+    res.json({ ...computeSwapQuote(fromAmount), source: 'estimate' })
   }
 })
 

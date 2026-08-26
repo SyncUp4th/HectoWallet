@@ -2,6 +2,7 @@ import { publicClient } from '../chain/publicClient.js'
 import { ERC20_ABI } from '../chain/erc20Abi.js'
 import { COINS } from '../constants/coins.js'
 import { getTokenAddress, getOperatorAddress } from '../config.js'
+import { tokenDecimals } from './swapService.js'
 import { log, logError } from '../lib/logger.js'
 
 export async function getAssets() {
@@ -17,7 +18,7 @@ export async function getAssets() {
         log('rpc', `balanceOf request`, { symbol: coin.symbol, tokenAddress: address, operator })
         const [raw, decimals] = await Promise.all([
           publicClient.readContract({ address, abi: ERC20_ABI, functionName: 'balanceOf', args: [operator] }),
-          publicClient.readContract({ address, abi: ERC20_ABI, functionName: 'decimals' }),
+          tokenDecimals(address),
         ])
         const balance = Number(raw / 10n ** BigInt(decimals))
         log('rpc', `balanceOf response`, { symbol: coin.symbol, balance })

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/index.js'
 import { useApiData } from '../hooks/useApiData.js'
-import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
-import { computeSwapQuote, SWAP_FEE_RATE } from '../lib/swap.js'
+import { displaySymbol } from '../constants/coins.js'
 
 export default function StorePage() {
   const { data, error, retry } = useApiData(() => api.getStoreProducts())
@@ -24,42 +23,22 @@ export default function StorePage() {
   }
   if (!data) return <div className="pageloading">불러오는 중…</div>
 
-  function balanceOf(symbol) {
-    return assets?.coins.find((c) => c.symbol === symbol)?.balance ?? 0
-  }
+  const heldCurrency = assets?.coins.find((c) => c.symbol === data.currency)?.balance ?? 0
 
+  // The purchase settles on-chain, so a swap leg has to confirm before the
+  // transfer can go out — this is slow by nature, not a hung request.
   async function handleBuy(product) {
     setBuyingId(product.id)
-    await new Promise((r) => setTimeout(r, 400))
-
-    const hhpcBalance = balanceOf('HHPC')
-    if (hhpcBalance >= product.priceHhpc) {
-      setResults((r) => ({ ...r, [product.id]: `HHPC ${product.priceHhpc.toLocaleString()}으로 구매를 완료했습니다.` }))
+    setResults((r) => ({ ...r, [product.id]: null }))
+    try {
+      const res = await api.purchaseProduct(product.id)
+      setResults((r) => ({ ...r, [product.id]: { ok: true, ...res } }))
+      api.getAssets().then(setAssets).catch(() => {})
+    } catch (err) {
+      setResults((r) => ({ ...r, [product.id]: { ok: false, message: err.message } }))
+    } finally {
       setBuyingId(null)
-      return
     }
-
-    // Not enough HHPC — auto-swap the shortfall from the first other coin
-    // that has enough balance to cover it after the swap fee.
-    const shortfall = product.priceHhpc - hhpcBalance
-    const neededFromAmount = Math.ceil(shortfall / (1 - SWAP_FEE_RATE))
-    const donor = PEGGED_COINS
-      .filter((c) => c.symbol !== 'HHPC')
-      .map((c) => ({ ...c, balance: balanceOf(c.symbol) }))
-      .find((c) => c.balance >= neededFromAmount)
-
-    if (!donor) {
-      setResults((r) => ({ ...r, [product.id]: '보유 자산이 부족해 구매할 수 없습니다.' }))
-      setBuyingId(null)
-      return
-    }
-
-    const swappedIn = computeSwapQuote(neededFromAmount).toAmount
-    setResults((r) => ({
-      ...r,
-      [product.id]: `${displaySymbol(donor.symbol)} ${neededFromAmount.toLocaleString()}개를 HHPC ${swappedIn.toLocaleString()}으로 자동 스왑해 구매를 완료했습니다.`,
-    }))
-    setBuyingId(null)
   }
 
   return (
@@ -69,24 +48,49 @@ export default function StorePage() {
         {data.brand} 상품을 {data.currency}로 구매할 수 있습니다. {data.currency}가 부족하면 다른 보유 코인이 자동으로 스왑됩니다.
       </p>
 
-      <div className="storelist">
-        {data.products.map((p) => (
-          <div className="storecard" key={p.id}>
-            <div className="storecard-icon"><i className="ti ti-pill" aria-hidden="true"></i></div>
-            <div className="storecard-body">
-              <div className="storecard-name">{p.name}</div>
-              <div className="storecard-desc">{p.description}</div>
-              <div className="storecard-row">
-                <span className="storecard-price">{p.priceHhpc.toLocaleString()} HHPC</span>
-                <button className="storecard-buy" onClick={() => handleBuy(p)} disabled={buyingId === p.id}>
-                  {buyingId === p.id ? '처리 중…' : '구매하기'}
-                </button>
-              </div>
-              {results[p.id] && <p className="storecard-result">{results[p.id]}</p>}
-            </div>
-          </div>
-        ))}
+      <div className="swap-balance">
+        <span>{displaySymbol(data.currency)} 보유 자산</span>
+        <span>{heldCurrency.toLocaleString()} {displaySymbol(data.currency)}</span>
       </div>
+
+      <div className="storelist">
+        {data.products.map((p) => {
+          const result = results[p.id]
+          return (
+            <div className="storecard" key={p.id}>
+              <div className="storecard-icon"><i className="ti ti-pill" aria-hidden="true"></i></div>
+              <div className="storecard-body">
+                <div className="storecard-name">{p.name}</div>
+                <div className="storecard-desc">{p.description}</div>
+                <div className="storecard-row">
+                  <span className="storecard-price">{p.priceHhpc.toLocaleString()} {data.currency}</span>
+                  <button className="storecard-buy" onClick={() => handleBuy(p)} disabled={buyingId === p.id}>
+                    {buyingId === p.id ? '결제 중…' : '구매하기'}
+                  </button>
+                </div>
+                {result?.ok && (
+                  <p className="storecard-result">
+                    {result.swap && (
+                      <>{displaySymbol(result.swap.fromSymbol)} {result.swap.fromAmount.toLocaleString()}개를 자동 스왑한 뒤 </>
+                    )}
+                    {result.price.toLocaleString()} {displaySymbol(result.currency)} 결제를 전송했습니다.{' '}
+                    <a href={result.explorerUrl} target="_blank" rel="noreferrer" className="swap-txlink">
+                      Etherscan <i className="ti ti-external-link" style={{ fontSize: 11 }} aria-hidden="true"></i>
+                    </a>
+                  </p>
+                )}
+                {result && !result.ok && <p className="storecard-error">{result.message}</p>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {data.merchantAddress && (
+        <p className="store-note">
+          결제 대금은 판매자 주소 <code>{data.merchantAddress}</code>로 실제 전송됩니다.
+        </p>
+      )}
     </section>
   )
 }

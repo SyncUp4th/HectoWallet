@@ -151,6 +151,9 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .swap-error{font-size:12px;color:var(--danger);margin:0 0 12px}
 .swap-note{font-size:12px;color:var(--ink-mute);margin:0 0 12px}
 .swap-result{font-size:12.5px;color:var(--ink-soft);margin-top:10px}
+.txrow-amt.dir-out{color:var(--danger)}
+.txrow-amt.dir-in{color:var(--success)}
+
 .walletbar{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:1rem}
 .walletbar-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
 .walletbar-label{font-size:11px;color:var(--ink-mute)}
@@ -256,4 +259,7 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .storecard-price{font-family:var(--font-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
 .storecard-buy{padding:8px 14px;border:none;border-radius:9px;background:var(--accent);color:var(--surface);font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0}
 .storecard-buy:disabled{opacity:0.6;cursor:not-allowed}
-.storecard-result{font-size:11.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:8px;padding:7px 9px;margin:10px 0 0}
+.storecard-result{font-size:11.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:8px;padding:7px 9px;margin:10px 0 0;line-height:1.6}
+.storecard-error{font-size:11.5px;color:var(--danger);margin:10px 0 0;line-height:1.5}
+.store-note{font-size:11px;color:var(--ink-mute);margin:1.25rem 0 0;line-height:1.6}
+.store-note code{font-family:var(--font-mono);font-size:10.5px;word-break:break-all}

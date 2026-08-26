@@ -1,4 +1,5 @@
 import { SYMBOL_NAME, displaySymbol } from '../constants/coins.js'
+import { HUB_SYMBOL } from '../chain/uniswap.js'
 import { relativeTime } from './relativeTime.js'
 
 function formatAmount(transfer) {
@@ -40,9 +41,16 @@ export function groupIntoTransactions(transfers, address) {
     if (outs.length > 0 && ins.length > 0 && distinctSymbols.size > 1) {
       const out = outs[0]
       const inn = ins[0]
+      // The hub leg moves pool-to-pool, so Etherscan's address-filtered
+      // tokentx never returns it — hop count can't be counted from the rows.
+      // Infer it from the pool topology instead: only X-hub pools exist, so a
+      // swap where neither side is the hub must have routed through it.
+      const touchesHub = out.tokenSymbol === HUB_SYMBOL || inn.tokenSymbol === HUB_SYMBOL
+      const hops = touchesHub ? 1 : 2
       rows.push({
         hash,
         type: 'swap',
+        hops,
         fromCompany: companyLabel(out.tokenSymbol),
         toCompany: companyLabel(inn.tokenSymbol),
         flow: `${formatAmount(out).toLocaleString()} ${displaySymbol(out.tokenSymbol)} → ${formatAmount(inn).toLocaleString()} ${displaySymbol(inn.tokenSymbol)}`,
@@ -51,13 +59,18 @@ export function groupIntoTransactions(transfers, address) {
         timestampMs,
       })
     } else {
-      const t = group[0]
+      // One-sided move. Name our own end by the coin's company and the far end
+      // by its address, so an outgoing store purchase reads as
+      // "헥토헬스케어 → 0x0000...dEaD" rather than two opaque addresses.
+      const t = outs[0] ?? ins[0] ?? group[0]
+      const outgoing = t.from.toLowerCase() === addr
       rows.push({
         hash,
         type: 'transfer',
-        fromCompany: shortAddress(t.from),
-        toCompany: shortAddress(t.to),
-        flow: `${formatAmount(t).toLocaleString()} ${displaySymbol(t.tokenSymbol)}`,
+        direction: outgoing ? 'out' : 'in',
+        fromCompany: outgoing ? companyLabel(t.tokenSymbol) : shortAddress(t.from),
+        toCompany: outgoing ? shortAddress(t.to) : companyLabel(t.tokenSymbol),
+        flow: `${outgoing ? '-' : '+'}${formatAmount(t).toLocaleString()} ${displaySymbol(t.tokenSymbol)}`,
         status: 'success',
         time: relativeTime(timestampMs),
         timestampMs,

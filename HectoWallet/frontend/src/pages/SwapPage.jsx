@@ -5,6 +5,15 @@ import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
 import TokenSelect from '../components/TokenSelect.jsx'
 import RateInfoTooltip from '../components/RateInfoTooltip.jsx'
 
+// Pool fees here are 0.01%, so two decimals is the floor that shows them at
+// all — anything smaller is real but not worth a digit, hence the "<" form.
+function formatPercent(rate) {
+  const pct = (rate ?? 0) * 100
+  if (pct === 0) return '0.00%'
+  if (pct < 0.01) return '<0.01%'
+  return `${pct.toFixed(2)}%`
+}
+
 export default function SwapPage() {
   const [searchParams] = useSearchParams()
 
@@ -95,9 +104,26 @@ export default function SwapPage() {
             <span className="rate-label-wrap">고정 교환비율<RateInfoTooltip rates={rates} /></span>
             <span>1 {displaySymbol(fromSymbol)} = 1 {displaySymbol(toSymbol)} (1 원 공통 페그)</span>
           </div>
-          <div><span>가격 영향</span><span>0.00%</span></div>
-          <div><span>스왑 수수료</span><span>{(((quote?.feeRate) ?? 0) * 100).toFixed(2)}%</span></div>
-          <div><span>최소 수령량</span><span>{(quote?.minReceived ?? 0).toLocaleString()} {displaySymbol(toSymbol)}</span></div>
+          <div>
+            <span>스왑 경로</span>
+            <span>
+              {quote?.hops === 2
+                ? `${displaySymbol(fromSymbol)} → KRWC → ${displaySymbol(toSymbol)}`
+                : `${displaySymbol(fromSymbol)} → ${displaySymbol(toSymbol)}`}
+            </span>
+          </div>
+          <div><span>가격 영향</span><span>{formatPercent(quote?.priceImpact)}</span></div>
+          <div>
+            <span>스왑 수수료</span>
+            <span>{formatPercent(quote?.feeRate)}{quote?.hops === 2 ? ' (2개 풀)' : ''}</span>
+          </div>
+          <div>
+            <span>최소 수령량</span>
+            <span>{(quote?.minReceived ?? 0).toLocaleString()} {displaySymbol(toSymbol)}</span>
+          </div>
+          {quote?.source === 'estimate' && (
+            <div><span>견적 기준</span><span>추정치 (풀 조회 실패)</span></div>
+          )}
         </div>
 
         {invalid && <p className="swap-error">같은 코인끼리는 스왑할 수 없습니다.</p>}

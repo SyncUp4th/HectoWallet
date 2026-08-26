@@ -50,11 +50,11 @@ export const mockApi = {
     return {
       stats: { todayCount: 428, volume24h: 43700, activeWallets: 96, lastSyncBlock: 1208455 },
       items: [
-        { hash: '0x9a2f...11c4', type: 'swap', fromCompany: '헥토파이낸셜', toCompany: '헥토이노베이션', flow: '1,000 HFPC → 998 HIPC', status: 'success', time: '2분 전' },
-        { hash: '0x7b6d...88e2', type: 'swap', fromCompany: '헥토헬스케어', toCompany: '헥토이노베이션', flow: '500 HHPC → 499 HIPC', status: 'success', time: '6분 전' },
-        { hash: '0x1c4a...5f09', type: 'transfer', fromCompany: '올리브영', toCompany: '헥토헬스케어', flow: '2,340 OLIVEPC', status: 'pending', time: '11분 전' },
-        { hash: '0x44df...c712', type: 'swap', fromCompany: '헥토헬스케어', toCompany: '헥토이노베이션', flow: '3,000 HHPC → 2,995 HIPC', status: 'success', time: '24분 전' },
-        { hash: '0xe210...9a3b', type: 'swap', fromCompany: '원화 스테이블', toCompany: '헥토파이낸셜', flow: '1,000 KRWC → 998 HFPC', status: 'failed', time: '41분 전' },
+        { hash: '0x9a2f...11c4', type: 'swap', hops: 2, fromCompany: '헥토파이낸셜', toCompany: '헥토이노베이션', flow: '1,000 HFPC → 999 HIPC', status: 'success', time: '2분 전' },
+        { hash: '0x7b6d...88e2', type: 'transfer', direction: 'out', fromCompany: '헥토헬스케어', toCompany: '0x0000...dEaD', flow: '-15,000 HHPC', status: 'success', time: '6분 전' },
+        { hash: '0x1c4a...5f09', type: 'transfer', direction: 'in', fromCompany: '0x6ac2...d904', toCompany: '올리브영', flow: '+2,340 OLIVEPC', status: 'pending', time: '11분 전' },
+        { hash: '0x44df...c712', type: 'swap', hops: 1, fromCompany: '헥토헬스케어', toCompany: '원화 스테이블', flow: '3,000 HHPC → 2,999 KRWC', status: 'success', time: '24분 전' },
+        { hash: '0xe210...9a3b', type: 'swap', hops: 1, fromCompany: '원화 스테이블', toCompany: '헥토파이낸셜', flow: '1,000 KRWC → 999 HFPC', status: 'failed', time: '41분 전' },
       ],
     }
   },
@@ -64,12 +64,32 @@ export const mockApi = {
     return {
       brand: '드시모네',
       currency: 'HHPC',
+      merchantAddress: '0x000000000000000000000000000000000000dEaD',
       products: [
         { id: 'dsm-01', name: '드시모네 오리지널 유산균', description: '이탈리아 정통 유산균 De Simone Formulation', priceHhpc: 15000 },
         { id: 'dsm-02', name: '드시모네 키즈 유산균', description: '어린이용 저용량 포뮬러', priceHhpc: 18000 },
         { id: 'dsm-03', name: '드시모네 멀티비타민', description: '유산균과 함께 먹는 종합비타민', priceHhpc: 12000 },
         { id: 'dsm-04', name: '드시모네 콜라겐 스틱', description: '저분자 콜라겐 + 유산균 스틱', priceHhpc: 22000 },
       ],
+    }
+  },
+
+  async purchaseProduct(productId) {
+    await delay(900)
+    const products = (await this.getStoreProducts()).products
+    const product = products.find((p) => p.id === productId)
+    if (!product) throw new Error('상품을 찾을 수 없습니다')
+    const mockHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+    return {
+      productId: product.id,
+      productName: product.name,
+      price: product.priceHhpc,
+      currency: 'HHPC',
+      merchantAddress: '0x000000000000000000000000000000000000dEaD',
+      swap: null,
+      txHash: mockHash,
+      explorerUrl: `https://sepolia.etherscan.io/tx/${mockHash}`,
+      status: 'submitted',
     }
   },
 

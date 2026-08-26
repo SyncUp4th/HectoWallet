@@ -20,4 +20,5 @@ export const httpApi = {
   getTransactions: (params = {}) => request(`/api/transactions?${new URLSearchParams(params)}`),
   getSettlement: (period) => request(`/api/settlement?period=${encodeURIComponent(period ?? '')}`),
   getStoreProducts: () => request('/api/store/products'),
+  purchaseProduct: (productId) => request('/api/store/purchase', { method: 'POST', body: JSON.stringify({ productId }) }),
 }

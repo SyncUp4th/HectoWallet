@@ -3,7 +3,7 @@ import { getWalletClient, getOperatorAccount } from '../chain/walletClient.js'
 import { ERC20_ABI } from '../chain/erc20Abi.js'
 import {
   SWAP_ROUTER_02, QUOTER_V2, POOL_FEE, HUB_SYMBOL,
-  SWAP_ROUTER_ABI, QUOTER_V2_ABI, encodePath, buildRoute,
+  SWAP_ROUTER_ABI, QUOTER_V2_ABI, encodePath, buildRoute, feeRateForHops,
 } from '../chain/uniswap.js'
 import { getTokenAddress } from '../config.js'
 import { PEGGED_SYMBOLS } from '../constants/coins.js'
@@ -31,14 +31,29 @@ function resolveAddresses(fromSymbol, toSymbol) {
   return { from, to, route, path }
 }
 
+// An ERC20's decimals can never change, so one read per token per process is
+// enough — without this a single purchase burns a dozen calls and trips the
+// RPC provider's rate limit.
+const _decimalsCache = new Map()
+export async function tokenDecimals(tokenAddress) {
+  const key = tokenAddress.toLowerCase()
+  if (!_decimalsCache.has(key)) {
+    _decimalsCache.set(key, await publicClient.readContract({
+      address: tokenAddress, abi: ERC20_ABI, functionName: 'decimals',
+    }))
+  }
+  return _decimalsCache.get(key)
+}
+
 async function toBaseUnits(tokenAddress, amount) {
-  const decimals = await publicClient.readContract({ address: tokenAddress, abi: ERC20_ABI, functionName: 'decimals' })
+  const decimals = await tokenDecimals(tokenAddress)
   return { wei: BigInt(amount) * 10n ** BigInt(decimals), decimals }
 }
 
 export async function quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount }) {
-  const { from, to, path } = resolveAddresses(fromSymbol, toSymbol)
+  const { from, to, route, path } = resolveAddresses(fromSymbol, toSymbol)
   const { wei: amountInWei } = await toBaseUnits(from, fromAmount)
+  const hops = route.length - 1
 
   // quoteExactInput is nonpayable by ABI but never actually written to chain —
   // simulate it to read the return value without sending a transaction.
@@ -49,12 +64,33 @@ export async function quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount }) {
     args: [path, amountInWei],
   })
   const [amountOutWei] = result
-  const toDecimals = await publicClient.readContract({ address: to, abi: ERC20_ABI, functionName: 'decimals' })
+  const toDecimals = await tokenDecimals(to)
+  const scale = 10n ** BigInt(toDecimals)
+
+  const toAmount = Number(amountOutWei / scale)
+  const amountOutMinimumWei = (amountOutWei * (10_000n - SLIPPAGE_BPS)) / 10_000n
+
+  // Every coin is pegged 1:1, so a fee-free swap would return exactly the
+  // input. Whatever the pool withholds beyond the known fee is price impact.
+  // Measured against the unrounded output — comparing the floored whole-coin
+  // figure would report sub-1-coin truncation as if it were pool slippage.
+  const feeRate = feeRateForHops(hops)
+  const exactOut = Number(amountOutWei) / Number(scale)
+  const expectedAfterFee = Number(fromAmount) * (1 - feeRate)
+  const priceImpact = expectedAfterFee > 0
+    ? Math.max(0, (expectedAfterFee - exactOut) / expectedAfterFee)
+    : 0
 
   return {
-    amountOutWei,
-    toAmount: Number(amountOutWei / 10n ** BigInt(toDecimals)),
     amountInWei,
+    amountOutWei,
+    amountOutMinimumWei,
+    toAmount,
+    minReceived: Number(amountOutMinimumWei / scale),
+    feeRate,
+    priceImpact,
+    hops,
+    slippageTolerance: Number(SLIPPAGE_BPS) / 10_000,
   }
 }
 
@@ -73,8 +109,8 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
   })
   if (balance < amountInWei) throw new Error(`${fromSymbol} 잔액이 부족합니다`)
 
-  const { amountOutWei, toAmount } = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount })
-  const amountOutMinimum = (amountOutWei * (10_000n - SLIPPAGE_BPS)) / 10_000n
+  const quote = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount })
+  const amountOutMinimum = quote.amountOutMinimumWei
 
   const allowance = await publicClient.readContract({
     address: from, abi: ERC20_ABI, functionName: 'allowance', args: [account.address, SWAP_ROUTER_02],
@@ -102,9 +138,39 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
     fromSymbol,
     toSymbol,
     fromAmount,
-    toAmount,
-    hops: route.length - 1,
+    toAmount: quote.toAmount,
+    minReceived: quote.minReceived,
+    feeRate: quote.feeRate,
+    priceImpact: quote.priceImpact,
+    hops: quote.hops,
     status: 'submitted',
     explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}`,
   }
+}
+
+// Plain ERC20 transfer from the operator wallet — used by the store to move
+// the purchase amount out, so a demo purchase settles as a real on-chain tx.
+export async function transferToken({ symbol, to, amount }) {
+  if (!amount || amount <= 0) throw new Error('수량이 유효하지 않습니다')
+
+  const walletClient = getWalletClient()
+  const account = getOperatorAccount()
+  if (!walletClient || !account) throw new Error('OPERATOR_PRIVATE_KEY가 설정되지 않아 전송할 수 없습니다')
+
+  const tokenAddress = getTokenAddress(symbol)
+  if (!tokenAddress) throw new Error(`TOKEN_ADDRESS_${symbol}가 설정되지 않았습니다`)
+
+  const { wei } = await toBaseUnits(tokenAddress, amount)
+  const balance = await publicClient.readContract({
+    address: tokenAddress, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address],
+  })
+  if (balance < wei) throw new Error(`${symbol} 잔액이 부족합니다`)
+
+  log('transfer', `Transferring ${symbol}`, { to, amount })
+  const txHash = await walletClient.writeContract({
+    address: tokenAddress, abi: ERC20_ABI, functionName: 'transfer', args: [to, wei],
+  })
+
+  log('transfer', 'Transfer tx submitted', { txHash })
+  return { txHash, symbol, to, amount, explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}` }
 }

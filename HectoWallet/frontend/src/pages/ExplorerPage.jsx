@@ -4,9 +4,21 @@ import { useApiData } from '../hooks/useApiData.js'
 
 const STATUS_LABEL = { success: '성공', pending: '대기', failed: '실패' }
 const STATUS_CLASS = { success: 'badge-success', pending: 'badge-pending', failed: 'badge-failed' }
-const TYPE_LABEL = { swap: '스왑', transfer: '전송' }
 const TYPE_CLASS = { swap: 'badge-swap', transfer: 'badge-transfer' }
-const TYPE_ICON = { swap: 'ti-arrows-exchange', transfer: 'ti-arrow-up-right' }
+
+// A hub-routed swap and a one-sided transfer are worth distinguishing at a
+// glance — the row already carries hops/direction, so read them here.
+function typeLabel(tx) {
+  if (tx.type === 'swap') return tx.hops === 2 ? '스왑 (경유)' : '스왑'
+  if (tx.direction === 'in') return '입금'
+  if (tx.direction === 'out') return '출금'
+  return '전송'
+}
+
+function typeIcon(tx) {
+  if (tx.type === 'swap') return 'ti-arrows-exchange'
+  return tx.direction === 'in' ? 'ti-arrow-down-left' : 'ti-arrow-up-right'
+}
 
 // Mock data ships shortened placeholder hashes ("0x9a2f...11c4") that don't
 // resolve on Etherscan — only link out once a real full hash is flowing in.
@@ -63,7 +75,9 @@ export default function ExplorerPage() {
         {filtered.map((tx) => (
           <div className="txrow" key={tx.hash}>
             <div className="txrow-top">
-              <span className="txrow-type"><i className={`ti ${TYPE_ICON[tx.type]}`} aria-hidden="true"></i>{TYPE_LABEL[tx.type]}</span>
+              <span className="txrow-type">
+                <i className={`ti ${typeIcon(tx)}`} aria-hidden="true"></i>{typeLabel(tx)}
+              </span>
               <span className={`badge ${STATUS_CLASS[tx.status]}`}>{STATUS_LABEL[tx.status]}</span>
             </div>
             <div className="txrow-flow">
@@ -71,7 +85,7 @@ export default function ExplorerPage() {
               <i className="ti ti-arrow-right" style={{ fontSize: 13 }} aria-hidden="true"></i>
               <span>{tx.toCompany}</span>
             </div>
-            <div className="txrow-amt">{tx.flow}</div>
+            <div className={`txrow-amt${tx.direction ? ` dir-${tx.direction}` : ''}`}>{tx.flow}</div>
             <div className="txrow-meta">
               {isFullHash(tx.hash) ? (
                 <a

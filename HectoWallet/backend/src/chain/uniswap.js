@@ -9,6 +9,19 @@ export const UNISWAP_FACTORY = '0x0227628f3F023bb0B980b67D528571c95c6DaC1c'
 // which is what a 1:1 peg wants (a wider tier would charge more for no benefit).
 export const POOL_FEE = 100
 
+// V3 fees are hundredths of a bip, so 1e6 is 100%.
+export const FEE_DENOMINATOR = 1_000_000
+
+// Each hop charges its own fee on the amount that survived the previous hop,
+// so the rates compound rather than add. Compounded in integer fee-units and
+// divided once at the end — `1 - 0.9999**1` in floats lands just under the
+// true 0.0001, which is enough to render an exact 0.01% fee as "<0.01%".
+export function feeRateForHops(hops) {
+  const kept = BigInt(FEE_DENOMINATOR - POOL_FEE) ** BigInt(hops)
+  const total = BigInt(FEE_DENOMINATOR) ** BigInt(hops)
+  return Number(total - kept) / Number(total)
+}
+
 // Only X-USDT pools exist, so USDT is the routing hub: any coin-to-coin swap
 // hops through it (HFPC -> USDT -> HIPC) while USDT pairs swap directly.
 export const HUB_SYMBOL = 'USDT'
