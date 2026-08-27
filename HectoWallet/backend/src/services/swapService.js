@@ -14,6 +14,19 @@ import { log, logError } from '../lib/logger.js'
 const SLIPPAGE_BPS = 50n // 0.50%
 const MAX_UINT256 = 2n ** 256n - 1n
 
+// Vercel's serverless function timeout (10s on the Hobby plan) sits close to
+// what a purchase's two sequential on-chain transfers can take: nonce, gas
+// estimate, and fee-history lookups add ~2.5s of preflight PER writeContract
+// call on top of the balance reads. Passing a fixed gas limit skips
+// eth_estimateGas entirely — measured usage is ~52k for an ERC20 transfer and
+// ~204k for a 2-hop swap, so these leave real margin without over-paying gas
+// (Sepolia ETH is free, and viem still fetches the real fee-per-gas, so this
+// only ever risks reverting on genuinely unexpected gas use, never overpaying
+// price — just the fixed unit count).
+const GAS_APPROVE = 70_000n
+const GAS_TRANSFER = 80_000n
+const GAS_SWAP = 350_000n
+
 function resolveAddresses(fromSymbol, toSymbol) {
   if (!PEGGED_SYMBOLS.includes(fromSymbol)) throw new Error(`알 수 없는 코인: ${fromSymbol}`)
   if (!PEGGED_SYMBOLS.includes(toSymbol)) throw new Error(`알 수 없는 코인: ${toSymbol}`)
@@ -104,21 +117,21 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
   const { from, to, route, path } = resolveAddresses(fromSymbol, toSymbol)
   const { wei: amountInWei } = await toBaseUnits(from, fromAmount)
 
-  const balance = await publicClient.readContract({
-    address: from, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address],
-  })
+  // Balance, allowance, and the pool quote don't depend on each other — only
+  // the decisions made from them do — so they run concurrently instead of
+  // as three sequential round trips.
+  const [balance, allowance, quote] = await Promise.all([
+    publicClient.readContract({ address: from, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address] }),
+    publicClient.readContract({ address: from, abi: ERC20_ABI, functionName: 'allowance', args: [account.address, SWAP_ROUTER_02] }),
+    quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount }),
+  ])
   if (balance < amountInWei) throw new Error(`${fromSymbol} 잔액이 부족합니다`)
-
-  const quote = await quoteSwapOnChain({ fromSymbol, toSymbol, fromAmount })
   const amountOutMinimum = quote.amountOutMinimumWei
 
-  const allowance = await publicClient.readContract({
-    address: from, abi: ERC20_ABI, functionName: 'allowance', args: [account.address, SWAP_ROUTER_02],
-  })
   if (allowance < amountInWei) {
     log('swap', `Approving ${fromSymbol} for router`, { spender: SWAP_ROUTER_02 })
     const approveHash = await walletClient.writeContract({
-      address: from, abi: ERC20_ABI, functionName: 'approve', args: [SWAP_ROUTER_02, MAX_UINT256],
+      address: from, abi: ERC20_ABI, functionName: 'approve', args: [SWAP_ROUTER_02, MAX_UINT256], gas: GAS_APPROVE,
     })
     await publicClient.waitForTransactionReceipt({ hash: approveHash, timeout: 120_000 })
     log('swap', 'Approve confirmed', { approveHash })
@@ -130,6 +143,7 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
     abi: SWAP_ROUTER_ABI,
     functionName: 'exactInput',
     args: [{ path, recipient: account.address, amountIn: amountInWei, amountOutMinimum }],
+    gas: GAS_SWAP,
   })
 
   log('swap', 'Swap tx submitted', { txHash })
@@ -164,19 +178,21 @@ export async function transferToken({ symbol, to, amount, from = 'operator' }) {
   if (!tokenAddress) throw new Error(`TOKEN_ADDRESS_${symbol}가 설정되지 않았습니다`)
 
   const { wei } = await toBaseUnits(tokenAddress, amount)
-  const balance = await publicClient.readContract({
-    address: tokenAddress, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address],
-  })
-  if (balance < wei) throw new Error(`${from} 지갑의 ${symbol} 잔액이 부족합니다`)
 
+  // Balance and gas are independent reads — check both at once instead of
+  // paying for two round trips back to back.
+  const [balance, gasBalance] = await Promise.all([
+    publicClient.readContract({ address: tokenAddress, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address] }),
+    publicClient.getBalance({ address: account.address }),
+  ])
+  if (balance < wei) throw new Error(`${from} 지갑의 ${symbol} 잔액이 부족합니다`)
   // A funded token balance is not enough — the sender pays its own gas, and
   // the merchant wallet is easy to leave without any ETH at all.
-  const gas = await publicClient.getBalance({ address: account.address })
-  if (gas === 0n) throw new Error(`${from} 지갑에 가스비(Sepolia ETH)가 없습니다`)
+  if (gasBalance === 0n) throw new Error(`${from} 지갑에 가스비(Sepolia ETH)가 없습니다`)
 
   log('transfer', `Transferring ${symbol}`, { from, to, amount })
   const txHash = await walletClient.writeContract({
-    address: tokenAddress, abi: ERC20_ABI, functionName: 'transfer', args: [to, wei],
+    address: tokenAddress, abi: ERC20_ABI, functionName: 'transfer', args: [to, wei], gas: GAS_TRANSFER,
   })
 
   log('transfer', 'Transfer tx submitted', { txHash })
