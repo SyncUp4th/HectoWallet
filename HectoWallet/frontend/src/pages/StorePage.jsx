@@ -223,7 +223,7 @@ export default function StorePage() {
               {data.rewardRate > 0 && (
                 <p className="mallcard-reward">
                   <i className="ti ti-gift" aria-hidden="true"></i>
-                  {Math.floor(p.priceHhpc * data.rewardRate).toLocaleString()} {label} 적립
+                  {Math.round(data.rewardRate * 100)}%({Math.floor(p.priceHhpc * data.rewardRate).toLocaleString()} {label}) 적립
                 </p>
               )}
 
