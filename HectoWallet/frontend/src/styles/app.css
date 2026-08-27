@@ -284,7 +284,6 @@ h2.pagetitle{font-size:19px;font-weight:700;margin:0 0 1rem}
 .mallcard-thumb.cat-promo{background:linear-gradient(140deg,#e4f2fb,#f2f8fc)}
 .mallcard-thumb.cat-premium{background:linear-gradient(140deg,#e8ecfb,#f4f6fd)}
 .mallcard-thumb.cat-basic{background:linear-gradient(140deg,#eaf5ee,#f5faf7)}
-.mallcard-badge{position:absolute;top:7px;left:7px;background:rgba(20,32,44,0.82);color:#fff;font-size:9.5px;font-weight:600;padding:3px 6px;border-radius:5px;letter-spacing:-0.01em}
 .mallcard-sold{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,32,44,0.55);color:#fff;font-size:12px;font-weight:700;letter-spacing:0.06em}
 
 .mallcard-buy{width:100%;background:var(--surface);border:0.5px solid var(--border-strong);border-radius:8px;padding:7px 0;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px}

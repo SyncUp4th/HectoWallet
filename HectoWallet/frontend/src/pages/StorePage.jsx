@@ -186,7 +186,6 @@ export default function StorePage() {
           return (
             <article className="mallcard" key={p.id}>
               <div className={`mallcard-thumb cat-${p.category}`}>
-                {p.badge && <span className="mallcard-badge">{p.badge}</span>}
                 {p.soldOut && <span className="mallcard-sold">SOLD OUT</span>}
                 {p.image
                   ? <img src={p.image} alt={p.name} loading="lazy" />

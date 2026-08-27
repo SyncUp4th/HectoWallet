@@ -73,9 +73,9 @@ export const mockApi = {
         { id: 'basic', label: '베이직 라인' },
       ],
       products: [
-        { id: 'dsm-1200-2box', category: 'promo', name: '드시모네 1200 (60포) 2BOX', tags: ['4개월분', '아연', '비타민D'], listPriceHhpc: 296000, priceHhpc: 192400, rating: 4.9, reviews: 710, badge: '드시모네몰 단독', image: '/store/dsm-1200-2box.png' },
+        { id: 'dsm-1200-2box', category: 'promo', name: '드시모네 1200 (60포) 2BOX', tags: ['4개월분', '아연', '비타민D'], listPriceHhpc: 296000, priceHhpc: 192400, rating: 4.9, reviews: 710, image: '/store/dsm-1200-2box.png' },
         { id: 'dsm-2000-2box', category: 'promo', name: '드시모네 2000 2BOX', tags: ['보장균수 2,000억'], listPriceHhpc: 256000, priceHhpc: 179200, rating: 4.8, reviews: 1672, image: '/store/dsm-2000-2box.png' },
-        { id: 'dsm-kids-blue-2box', category: 'promo', name: '드시모네 키즈 프리미엄 블루베리향 2BOX', tags: ['키즈 유산균 보장균수 1위'], listPriceHhpc: 196000, priceHhpc: 137200, rating: 4.7, reviews: 351, badge: '드시모네몰 단독', image: '/store/dsm-kids-blue-2box.png' },
+        { id: 'dsm-kids-blue-2box', category: 'promo', name: '드시모네 키즈 프리미엄 블루베리향 2BOX', tags: ['키즈 유산균 보장균수 1위'], listPriceHhpc: 196000, priceHhpc: 137200, rating: 4.7, reviews: 351, image: '/store/dsm-kids-blue-2box.png' },
         { id: 'dsm-baby-step1-3box', category: 'promo', name: '드시모네 베이비 스텝1 3BOX', tags: ['모유ㆍ분유 수유 아기'], listPriceHhpc: 114000, priceHhpc: 79800, rating: 4.9, reviews: 1204, image: '/store/dsm-baby-step1-3box.png' },
         { id: 'dsm-4500', category: 'premium', name: '드시모네 4500 (30포)', tags: ['보장균수 4,500억'], listPriceHhpc: 168000, priceHhpc: 142800, rating: 4.9, reviews: 5179, image: '/store/dsm-4500.jpg' },
         { id: 'dsm-2000', category: 'premium', name: '드시모네 2000 (30포)', tags: ['보장균수 2,000억'], priceHhpc: 128000, rating: 4.8, reviews: 1077, image: '/store/dsm-2000.jpg' },
