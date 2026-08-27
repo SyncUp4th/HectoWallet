@@ -10,7 +10,7 @@ export default function SettlementPage() {
     <div className="desktop-page">
       <div className="desktop-header">
         <div className="brand">
-          <div className="brand-mark">H</div>
+          <img src="/brand-icon.png" alt="" className="brand-mark" />
           <div className="brand-name">HectoWallet · 정산 관리</div>
         </div>
       </div>

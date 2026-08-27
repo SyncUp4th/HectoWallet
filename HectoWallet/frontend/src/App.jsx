@@ -22,7 +22,7 @@ function MobileShell() {
 
       <div className="topbar">
         <div className="brand">
-          <div className="brand-mark">H</div>
+          <img src="/brand-icon.png" alt="" className="brand-mark" />
           <div className="brand-name">HectoWallet</div>
         </div>
       </div>
