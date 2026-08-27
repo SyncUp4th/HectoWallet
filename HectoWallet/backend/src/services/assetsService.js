@@ -5,6 +5,9 @@ import { getTokenAddress, getOperatorAddress } from '../config.js'
 import { tokenDecimals } from './swapService.js'
 import { log, logError } from '../lib/logger.js'
 
+// Each coin reports its own token contract as `address`. The wallet those
+// balances belong to is the same for every coin, so repeating it per card said
+// nothing — it's returned once as `walletAddress` instead.
 export async function getAssets() {
   const operator = getOperatorAddress()
 
@@ -12,7 +15,7 @@ export async function getAssets() {
     COINS.map(async (coin) => {
       const address = getTokenAddress(coin.symbol)
       if (!operator || !address) {
-        return { symbol: coin.symbol, name: coin.name, balance: 0, address: operator, configured: false }
+        return { symbol: coin.symbol, name: coin.name, balance: 0, address, configured: false }
       }
       try {
         log('rpc', `balanceOf request`, { symbol: coin.symbol, tokenAddress: address, operator })
@@ -22,10 +25,10 @@ export async function getAssets() {
         ])
         const balance = Number(raw / 10n ** BigInt(decimals))
         log('rpc', `balanceOf response`, { symbol: coin.symbol, balance })
-        return { symbol: coin.symbol, name: coin.name, balance, address: operator, configured: true }
+        return { symbol: coin.symbol, name: coin.name, balance, address, configured: true }
       } catch (err) {
         logError('rpc', `balanceOf failed for ${coin.symbol}`, err)
-        return { symbol: coin.symbol, name: coin.name, balance: 0, address: operator, configured: true, error: err.shortMessage ?? err.message }
+        return { symbol: coin.symbol, name: coin.name, balance: 0, address, configured: true, error: err.shortMessage ?? err.message }
       }
     }),
   )

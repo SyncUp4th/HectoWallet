@@ -3,9 +3,17 @@ import { publicClient } from '../chain/publicClient.js'
 import { ERC20_ABI } from '../chain/erc20Abi.js'
 import { getTokenAddress, getOperatorAddress } from '../config.js'
 import { PEGGED_SYMBOLS } from '../constants/coins.js'
-import { log } from '../lib/logger.js'
+import { log, logError } from '../lib/logger.js'
 
 const STORE_CURRENCY = 'HHPC'
+
+// Purchase reward, paid by the merchant back to the buyer. Charged on the
+// amount actually paid (the sale price), not the struck-through list price.
+export const REWARD_RATE = 0.02
+
+export function rewardFor(price) {
+  return Math.floor(price * REWARD_RATE)
+}
 
 // Where a purchase's coins go. Deliberately has NO default: a purchase moves
 // real tokens irreversibly, so an unset address must block the purchase rather
@@ -45,6 +53,7 @@ export function getStoreProducts() {
   return {
     brand: '드시모네',
     currency: STORE_CURRENCY,
+    rewardRate: REWARD_RATE,
     merchantAddress: merchantAddress(),
     categories: CATEGORIES,
     products: PRODUCTS,
@@ -102,15 +111,40 @@ export async function purchaseProduct(productId) {
     symbol: STORE_CURRENCY,
     to: merchant,
     amount: product.priceHhpc,
+    from: 'operator',
   })
+
+  // Reward leaves the merchant wallet, so it needs that wallet's own key and
+  // gas. The two transfers aren't atomic: the payment has already settled by
+  // now, so a failed reward is reported alongside a successful purchase
+  // rather than rolling anything back or throwing the purchase away.
+  const rewardAmount = rewardFor(product.priceHhpc)
+  let reward = null
+  if (rewardAmount > 0) {
+    try {
+      const paid = await transferToken({
+        symbol: STORE_CURRENCY,
+        to: operator,
+        amount: rewardAmount,
+        from: 'merchant',
+      })
+      reward = { ...paid, rate: REWARD_RATE, status: 'submitted' }
+      log('store', 'Reward paid', { productId, rewardAmount })
+    } catch (err) {
+      logError('store', 'reward payout failed; purchase already settled', err)
+      reward = { amount: rewardAmount, rate: REWARD_RATE, status: 'failed', error: err.shortMessage ?? err.message }
+    }
+  }
 
   return {
     productId: product.id,
     productName: product.name,
     price: product.priceHhpc,
+    netPaid: product.priceHhpc - (reward?.status === 'submitted' ? rewardAmount : 0),
     currency: STORE_CURRENCY,
     merchantAddress: merchant,
     swap,
+    reward,
     txHash: transfer.txHash,
     explorerUrl: transfer.explorerUrl,
     status: 'submitted',

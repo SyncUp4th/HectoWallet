@@ -59,7 +59,7 @@ export default function WalletCard({ coin, expanded, pushdown, onToggle }) {
           <button className="wc-actbtn" onClick={handleSwap}>스왑</button>
         </div>
         <div className="wc-addr" onClick={handleCopy}>
-          <span>{coin.address}</span>
+          <span><small>컨트랙트</small> {coin.address}</span>
           <i className="ti ti-copy" style={{ fontSize: 14 }} aria-hidden="true"></i>
         </div>
       </div>

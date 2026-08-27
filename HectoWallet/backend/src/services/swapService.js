@@ -1,5 +1,5 @@
 import { publicClient } from '../chain/publicClient.js'
-import { getWalletClient, getOperatorAccount } from '../chain/walletClient.js'
+import { getWalletClient, getOperatorAccount, getWalletClientFor, getAccount } from '../chain/walletClient.js'
 import { ERC20_ABI } from '../chain/erc20Abi.js'
 import {
   SWAP_ROUTER_02, QUOTER_V2, POOL_FEE, HUB_SYMBOL,
@@ -148,14 +148,17 @@ export async function executeSwap({ fromSymbol, toSymbol, fromAmount }) {
   }
 }
 
-// Plain ERC20 transfer from the operator wallet — used by the store to move
-// the purchase amount out, so a demo purchase settles as a real on-chain tx.
-export async function transferToken({ symbol, to, amount }) {
+// Plain ERC20 transfer, signed by whichever wallet is sending. The store uses
+// both directions: the operator pays the purchase, the merchant pays the
+// reward back, so a demo purchase settles as two real on-chain transfers.
+const KEY_ENV = { operator: 'OPERATOR_PRIVATE_KEY', merchant: 'MERCHANT_PRIVATE_KEY' }
+
+export async function transferToken({ symbol, to, amount, from = 'operator' }) {
   if (!amount || amount <= 0) throw new Error('수량이 유효하지 않습니다')
 
-  const walletClient = getWalletClient()
-  const account = getOperatorAccount()
-  if (!walletClient || !account) throw new Error('OPERATOR_PRIVATE_KEY가 설정되지 않아 전송할 수 없습니다')
+  const walletClient = getWalletClientFor(from)
+  const account = getAccount(from)
+  if (!walletClient || !account) throw new Error(`${KEY_ENV[from]}가 설정되지 않아 전송할 수 없습니다`)
 
   const tokenAddress = getTokenAddress(symbol)
   if (!tokenAddress) throw new Error(`TOKEN_ADDRESS_${symbol}가 설정되지 않았습니다`)
@@ -164,13 +167,18 @@ export async function transferToken({ symbol, to, amount }) {
   const balance = await publicClient.readContract({
     address: tokenAddress, abi: ERC20_ABI, functionName: 'balanceOf', args: [account.address],
   })
-  if (balance < wei) throw new Error(`${symbol} 잔액이 부족합니다`)
+  if (balance < wei) throw new Error(`${from} 지갑의 ${symbol} 잔액이 부족합니다`)
 
-  log('transfer', `Transferring ${symbol}`, { to, amount })
+  // A funded token balance is not enough — the sender pays its own gas, and
+  // the merchant wallet is easy to leave without any ETH at all.
+  const gas = await publicClient.getBalance({ address: account.address })
+  if (gas === 0n) throw new Error(`${from} 지갑에 가스비(Sepolia ETH)가 없습니다`)
+
+  log('transfer', `Transferring ${symbol}`, { from, to, amount })
   const txHash = await walletClient.writeContract({
     address: tokenAddress, abi: ERC20_ABI, functionName: 'transfer', args: [to, wei],
   })
 
   log('transfer', 'Transfer tx submitted', { txHash })
-  return { txHash, symbol, to, amount, explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}` }
+  return { txHash, symbol, from: account.address, to, amount, explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}` }
 }

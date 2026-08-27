@@ -64,6 +64,7 @@ export const mockApi = {
     return {
       brand: '드시모네',
       currency: 'HHPC',
+      rewardRate: 0.02,
       merchantAddress: null,
       categories: [
         { id: 'all', label: '전체' },
@@ -91,16 +92,27 @@ export const mockApi = {
     const products = (await this.getStoreProducts()).products
     const product = products.find((p) => p.id === productId)
     if (!product) throw new Error('상품을 찾을 수 없습니다')
-    const mockHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+    const hash = () => '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+    const payTx = hash()
+    const rewardTx = hash()
+    const rewardAmount = Math.floor(product.priceHhpc * 0.02)
     return {
       productId: product.id,
       productName: product.name,
       price: product.priceHhpc,
+      netPaid: product.priceHhpc - rewardAmount,
       currency: 'HHPC',
-      merchantAddress: '0x000000000000000000000000000000000000dEaD',
+      merchantAddress: null,
       swap: null,
-      txHash: mockHash,
-      explorerUrl: `https://sepolia.etherscan.io/tx/${mockHash}`,
+      reward: {
+        amount: rewardAmount,
+        rate: 0.02,
+        status: 'submitted',
+        txHash: rewardTx,
+        explorerUrl: `https://sepolia.etherscan.io/tx/${rewardTx}`,
+      },
+      txHash: payTx,
+      explorerUrl: `https://sepolia.etherscan.io/tx/${payTx}`,
       status: 'submitted',
     }
   },

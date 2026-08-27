@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/index.js'
 import { PEGGED_COINS, displaySymbol } from '../constants/coins.js'
+import { computeSwapQuote } from '../lib/swap.js'
 import TokenSelect from '../components/TokenSelect.jsx'
 import RateInfoTooltip from '../components/RateInfoTooltip.jsx'
 
@@ -13,6 +14,8 @@ function formatPercent(rate) {
   if (pct < 0.01) return '<0.01%'
   return `${pct.toFixed(2)}%`
 }
+
+const DELTA_VISIBLE_MS = 9000
 
 export default function SwapPage() {
   const [searchParams] = useSearchParams()
@@ -29,11 +32,18 @@ export default function SwapPage() {
   const [rates, setRates] = useState([])
   const [assets, setAssets] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [result, setResult] = useState('')
+  const [result, setResult] = useState(null)
+  const [delta, setDelta] = useState(null)
+  const timers = useRef([])
+
+  function loadAssets() {
+    api.getAssets().then(setAssets).catch(() => {})
+  }
 
   useEffect(() => {
     api.getRates().then((r) => setRates(r.rates)).catch(() => setRates([]))
-    api.getAssets().then(setAssets).catch(() => setAssets(null))
+    loadAssets()
+    return () => timers.current.forEach(clearTimeout)
   }, [])
 
   useEffect(() => {
@@ -55,15 +65,28 @@ export default function SwapPage() {
   }
 
   const invalid = fromSymbol === toSymbol
-  const fromBalance = assets?.coins.find((c) => c.symbol === fromSymbol)?.balance ?? 0
+  const balanceOf = (symbol) => assets?.coins.find((c) => c.symbol === symbol)?.balance ?? 0
+  const fromBalance = balanceOf(fromSymbol)
+  const toBalance = balanceOf(toSymbol)
 
   async function handleSwap() {
     if (invalid || fromAmount <= 0) return
     setSubmitting(true)
     setResult(null)
+    setDelta(null)
     try {
       const res = await api.executeSwap({ fromSymbol, toSymbol, fromAmount })
       setResult({ ok: true, ...res })
+
+      // The tx is submitted, not yet mined, so the balances on chain haven't
+      // moved — show what the swap sends and receives right away, and refetch
+      // once the block has had time to land so the absolute figures catch up.
+      setDelta({ from: fromSymbol, to: toSymbol, out: res.fromAmount, in: res.toAmount })
+      timers.current.push(
+        setTimeout(loadAssets, 6000),
+        setTimeout(loadAssets, 16000),
+        setTimeout(() => setDelta(null), DELTA_VISIBLE_MS),
+      )
     } catch (err) {
       setResult({ ok: false, message: err.message })
     } finally {
@@ -71,13 +94,33 @@ export default function SwapPage() {
     }
   }
 
+  const settling = Boolean(delta)
+
   return (
     <section className="panel">
       <h2 className="pagetitle">코인 스왑</h2>
 
-      <div className="swap-balance">
-        <span>보낼 코인 보유 자산</span>
-        <span>{fromBalance.toLocaleString()} {displaySymbol(fromSymbol)}</span>
+      <div className={'swap-wallet' + (settling ? ' settling' : '')}>
+        <div className="swap-wallet-row">
+          <span>
+            <i className="ti ti-arrow-up-right" aria-hidden="true"></i>
+            보낼 코인 {displaySymbol(fromSymbol)}
+          </span>
+          <span className="swap-wallet-amt">
+            {fromBalance.toLocaleString()}
+            {delta && <em className="delta out">−{delta.out.toLocaleString()}</em>}
+          </span>
+        </div>
+        <div className="swap-wallet-row">
+          <span>
+            <i className="ti ti-arrow-down-left" aria-hidden="true"></i>
+            받을 코인 {displaySymbol(toSymbol)}
+          </span>
+          <span className="swap-wallet-amt">
+            {toBalance.toLocaleString()}
+            {delta && <em className="delta in">+{delta.in.toLocaleString()}</em>}
+          </span>
+        </div>
       </div>
 
       <div className="card swapcard">
@@ -112,14 +155,9 @@ export default function SwapPage() {
                 : `${displaySymbol(fromSymbol)} → ${displaySymbol(toSymbol)}`}
             </span>
           </div>
-          <div><span>가격 영향</span><span>{formatPercent(quote?.priceImpact)}</span></div>
           <div>
             <span>스왑 수수료</span>
             <span>{formatPercent(quote?.feeRate)}{quote?.hops === 2 ? ' (2개 풀)' : ''}</span>
-          </div>
-          <div>
-            <span>최소 수령량</span>
-            <span>{(quote?.minReceived ?? 0).toLocaleString()} {displaySymbol(toSymbol)}</span>
           </div>
           {quote?.source === 'estimate' && (
             <div><span>견적 기준</span><span>추정치 (풀 조회 실패)</span></div>
@@ -129,12 +167,15 @@ export default function SwapPage() {
         {invalid && <p className="swap-error">같은 코인끼리는 스왑할 수 없습니다.</p>}
 
         <button className="swap-cta" onClick={handleSwap} disabled={invalid || fromAmount <= 0 || submitting}>
-          {submitting ? '처리 중…' : '스왑하기'}
+          {submitting
+            ? <><i className="ti ti-loader-2 spin" aria-hidden="true"></i> 스왑 처리 중…</>
+            : '스왑하기'}
         </button>
 
-        {result && result.ok && (
+        {result?.ok && (
           <p className="swap-result">
-            {result.fromAmount.toLocaleString()} {displaySymbol(result.fromSymbol)} → {result.toAmount.toLocaleString()} {displaySymbol(result.toSymbol)} 스왑 제출 완료{' '}
+            <i className="ti ti-circle-check" aria-hidden="true"></i>
+            {result.fromAmount.toLocaleString()} {displaySymbol(result.fromSymbol)} → {result.toAmount.toLocaleString()} {displaySymbol(result.toSymbol)} 스왑 제출{' '}
             <a href={result.explorerUrl} target="_blank" rel="noreferrer" className="swap-txlink">
               Etherscan <i className="ti ti-external-link" style={{ fontSize: 11 }} aria-hidden="true"></i>
             </a>

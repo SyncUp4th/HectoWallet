@@ -25,17 +25,84 @@ function discountPercent(product) {
   return Math.round((1 - product.priceHhpc / product.listPriceHhpc) * 100)
 }
 
+function PurchaseModal({ receipt, label, onClose }) {
+  const rewardPaid = receipt.reward?.status === 'submitted'
+  return (
+    <div className="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="buy-done" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-check"><i className="ti ti-check" aria-hidden="true"></i></div>
+        <p className="modal-title" id="buy-done">구매 완료</p>
+        <p className="modal-sub">{receipt.productName}</p>
+
+        <div className="modal-lines">
+          {receipt.swap && (
+            <div>
+              <span>{displaySymbol(receipt.swap.fromSymbol)} 자동 스왑</span>
+              <span>{receipt.swap.fromAmount.toLocaleString()} → {receipt.swap.toAmount.toLocaleString()}</span>
+            </div>
+          )}
+          <div>
+            <span>결제 금액</span>
+            <span>{receipt.price.toLocaleString()} {label}</span>
+          </div>
+          {rewardPaid && (
+            <div className="reward">
+              <span><i className="ti ti-gift" aria-hidden="true"></i> {Math.round(receipt.reward.rate * 100)}% 리워드 적립</span>
+              <span>+{receipt.reward.amount.toLocaleString()} {label}</span>
+            </div>
+          )}
+          {rewardPaid && (
+            <div className="net">
+              <span>실 결제</span>
+              <span>{receipt.netPaid.toLocaleString()} {label}</span>
+            </div>
+          )}
+        </div>
+
+        {receipt.reward?.status === 'failed' && (
+          <p className="modal-warn">
+            리워드 {receipt.reward.amount.toLocaleString()} {label} 지급 실패 — {receipt.reward.error}
+            <br />결제는 정상 완료되었습니다.
+          </p>
+        )}
+
+        <div className="modal-links">
+          <a href={receipt.explorerUrl} target="_blank" rel="noreferrer">
+            결제 내역 <i className="ti ti-external-link" aria-hidden="true"></i>
+          </a>
+          {rewardPaid && (
+            <a href={receipt.reward.explorerUrl} target="_blank" rel="noreferrer">
+              적립 내역 <i className="ti ti-external-link" aria-hidden="true"></i>
+            </a>
+          )}
+        </div>
+
+        <button className="modal-btn" onClick={onClose} autoFocus>확인</button>
+      </div>
+    </div>
+  )
+}
+
 export default function StorePage() {
   const { data, error, retry } = useApiData(() => api.getStoreProducts())
   const [assets, setAssets] = useState(null)
   const [category, setCategory] = useState('all')
   const [sort, setSort] = useState('recommend')
-  const [results, setResults] = useState({})
+  const [errors, setErrors] = useState({})
+  const [receipt, setReceipt] = useState(null)
   const [buyingId, setBuyingId] = useState(null)
 
   useEffect(() => {
     api.getAssets().then(setAssets).catch(() => setAssets(null))
   }, [])
+
+  // Escape closes the receipt, same as the scrim and the 확인 button.
+  useEffect(() => {
+    if (!receipt) return
+    const onKey = (e) => { if (e.key === 'Escape') setReceipt(null) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [receipt])
 
   const visible = useMemo(() => {
     if (!data) return []
@@ -60,13 +127,15 @@ export default function StorePage() {
   // transfer can go out — this is slow by nature, not a hung request.
   async function handleBuy(product) {
     setBuyingId(product.id)
-    setResults((r) => ({ ...r, [product.id]: null }))
+    setErrors((e) => ({ ...e, [product.id]: null }))
     try {
       const res = await api.purchaseProduct(product.id)
-      setResults((r) => ({ ...r, [product.id]: { ok: true, ...res } }))
-      api.getAssets().then(setAssets).catch(() => {})
+      setReceipt(res)
+      // Payment and reward are only submitted, not mined — give the block time
+      // to land before reading the balance back.
+      setTimeout(() => api.getAssets().then(setAssets).catch(() => {}), 8000)
     } catch (err) {
-      setResults((r) => ({ ...r, [product.id]: { ok: false, message: err.message } }))
+      setErrors((e) => ({ ...e, [product.id]: err.message }))
     } finally {
       setBuyingId(null)
     }
@@ -111,7 +180,7 @@ export default function StorePage() {
 
       <div className="mallgrid">
         {visible.map((p) => {
-          const result = results[p.id]
+          const failure = errors[p.id]
           const off = discountPercent(p)
           const affordable = held >= p.priceHhpc
           return (
@@ -149,6 +218,13 @@ export default function StorePage() {
                 <strong>{p.priceHhpc.toLocaleString()}</strong> {label}
               </p>
 
+              {data.rewardRate > 0 && (
+                <p className="mallcard-reward">
+                  <i className="ti ti-gift" aria-hidden="true"></i>
+                  {Math.floor(p.priceHhpc * data.rewardRate).toLocaleString()} {label} 적립
+                </p>
+              )}
+
               {p.reviews > 0 && (
                 <p className="mallcard-rating">
                   <i className="ti ti-star-filled" aria-hidden="true"></i> {p.rating}
@@ -156,21 +232,15 @@ export default function StorePage() {
                 </p>
               )}
 
-              {result?.ok && (
-                <p className="mallcard-result">
-                  {result.swap && <>{displaySymbol(result.swap.fromSymbol)} 자동 스왑 후 </>}
-                  결제 전송 완료{' '}
-                  <a href={result.explorerUrl} target="_blank" rel="noreferrer" className="swap-txlink">
-                    Etherscan <i className="ti ti-external-link" style={{ fontSize: 10 }} aria-hidden="true"></i>
-                  </a>
-                </p>
-              )}
-              {result && !result.ok && <p className="mallcard-err">{result.message}</p>}
+              {failure && <p className="mallcard-err">{failure}</p>}
             </article>
           )
         })}
       </div>
 
+      {receipt && (
+        <PurchaseModal receipt={receipt} label={label} onClose={() => setReceipt(null)} />
+      )}
     </section>
   )
 }
