@@ -188,7 +188,9 @@ export default function StorePage() {
               <div className={`mallcard-thumb cat-${p.category}`}>
                 {p.badge && <span className="mallcard-badge">{p.badge}</span>}
                 {p.soldOut && <span className="mallcard-sold">SOLD OUT</span>}
-                <i className="ti ti-vaccine-bottle" aria-hidden="true"></i>
+                {p.image
+                  ? <img src={p.image} alt={p.name} loading="lazy" />
+                  : <i className="ti ti-vaccine-bottle" aria-hidden="true"></i>}
               </div>
 
               <button
