@@ -175,7 +175,7 @@ export default function SwapPage() {
         {result?.ok && (
           <p className="swap-result">
             <i className="ti ti-circle-check" aria-hidden="true"></i>
-            {result.fromAmount.toLocaleString()} {displaySymbol(result.fromSymbol)} → {result.toAmount.toLocaleString()} {displaySymbol(result.toSymbol)} 스왑 제출{' '}
+            {result.fromAmount.toLocaleString()} {displaySymbol(result.fromSymbol)} → {result.toAmount.toLocaleString()} {displaySymbol(result.toSymbol)} 스왑 완료{' '}
             <a href={result.explorerUrl} target="_blank" rel="noreferrer" className="swap-txlink">
               Etherscan <i className="ti ti-external-link" style={{ fontSize: 11 }} aria-hidden="true"></i>
             </a>
