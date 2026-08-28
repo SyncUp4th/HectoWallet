@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api/index.js'
 import { useApiData } from '../hooks/useApiData.js'
 import { displaySymbol } from '../constants/coins.js'
@@ -83,6 +83,13 @@ function PurchaseModal({ receipt, label, onClose }) {
   )
 }
 
+// A purchase's transfers are submitted, not mined, when the request returns,
+// so the balance behind them only moves a block or two later (~12s each on
+// Sepolia, and a purchase can be two transfers). Poll until the expected
+// figure actually lands rather than guessing one delay.
+const POLL_EVERY_MS = 4000
+const POLL_GIVE_UP_MS = 60000
+
 export default function StorePage() {
   const { data, error, retry } = useApiData(() => api.getStoreProducts())
   const [assets, setAssets] = useState(null)
@@ -91,9 +98,13 @@ export default function StorePage() {
   const [errors, setErrors] = useState({})
   const [receipt, setReceipt] = useState(null)
   const [buyingId, setBuyingId] = useState(null)
+  const [settling, setSettling] = useState(false)
+  const poll = useRef(null)
 
   useEffect(() => {
     api.getAssets().then(setAssets).catch(() => setAssets(null))
+    // Leaving the page mid-settlement must not keep polling or set state.
+    return () => { if (poll.current) clearInterval(poll.current) }
   }, [])
 
   // Escape closes the receipt, same as the scrim and the 확인 button.
@@ -123,6 +134,33 @@ export default function StorePage() {
   const held = assets?.coins.find((c) => c.symbol === data.currency)?.balance ?? 0
   const label = displaySymbol(data.currency)
 
+  // Refetch on an interval until the store-currency balance reaches what the
+  // receipt says it should be, then stop. Always adopts whatever the backend
+  // returns, so a partially-settled balance still shows progress; gives up
+  // after a bounded window so a stuck transfer can't poll forever.
+  function pollUntilSettled(expected) {
+    if (poll.current) clearInterval(poll.current)
+    setSettling(true)
+    const startedAt = Date.now()
+
+    poll.current = setInterval(async () => {
+      let next
+      try {
+        next = await api.getAssets()
+      } catch {
+        return // transient failure — the next tick retries
+      }
+      setAssets(next)
+
+      const now = next.coins.find((c) => c.symbol === data.currency)?.balance
+      if (now === expected || Date.now() - startedAt > POLL_GIVE_UP_MS) {
+        clearInterval(poll.current)
+        poll.current = null
+        setSettling(false)
+      }
+    }, POLL_EVERY_MS)
+  }
+
   // The purchase settles on-chain, so a swap leg has to confirm before the
   // transfer can go out — this is slow by nature, not a hung request.
   async function handleBuy(product) {
@@ -131,9 +169,13 @@ export default function StorePage() {
     try {
       const res = await api.purchaseProduct(product.id)
       setReceipt(res)
-      // Payment and reward are only submitted, not mined — give the block time
-      // to land before reading the balance back.
-      setTimeout(() => api.getAssets().then(setAssets).catch(() => {}), 8000)
+      // A failed reward never arrives, so only net it off when it was actually
+      // submitted — otherwise the target would be a figure that never lands
+      // and the poll would run out its full window every time. An auto-swap
+      // tops the store currency up first, so it counts the other way.
+      const paidOut = res.reward?.status === 'submitted' ? res.netPaid : res.price
+      const swappedIn = res.swap?.toAmount ?? 0
+      pollUntilSettled(held + swappedIn - paidOut)
     } catch (err) {
       setErrors((e) => ({ ...e, [product.id]: err.message }))
     } finally {
@@ -145,8 +187,15 @@ export default function StorePage() {
     <section className="panel">
       <h2 className="pagetitle">{data.brand}</h2>
 
-      <div className="mallbalance">
-        <span>{label} 보유 자산</span>
+      <div className={'mallbalance' + (settling ? ' settling' : '')}>
+        <span>
+          {label} 보유 자산
+          {settling && (
+            <em className="mallbalance-sync">
+              <i className="ti ti-loader-2 spin" aria-hidden="true"></i> 정산 반영 중
+            </em>
+          )}
+        </span>
         <span>{held.toLocaleString()} {label}</span>
       </div>
 
