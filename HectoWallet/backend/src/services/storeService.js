@@ -5,7 +5,9 @@ import { getTokenAddress, getOperatorAddress } from '../config.js'
 import { PEGGED_SYMBOLS } from '../constants/coins.js'
 import { log, logError } from '../lib/logger.js'
 
-const STORE_CURRENCY = 'HHPC'
+// The store is Desimone's Olive Young brand shop, so it settles in the Olive
+// Young point coin rather than the Hecto Healthcare one.
+const STORE_CURRENCY = 'OLIVEPC'
 
 // Purchase reward, paid by the merchant back to the buyer. Charged on the
 // amount actually paid (the sale price), not the struck-through list price.
@@ -22,36 +24,36 @@ function merchantAddress() {
   return process.env.STORE_MERCHANT_ADDRESS || null
 }
 
-// Catalog mirrors desimone.co.kr — a subset, not the full 35 SKUs. Prices are
-// the real KRW figures used as-is: every coin is pegged 1:1 to KRW, so the
-// won price and the HHPC price are the same number.
+// Catalog mirrors Desimone's Olive Young brand store — a subset, not all 29
+// SKUs. `listPrice`/`price` are the real KRW figures used as-is: every coin is
+// pegged 1:1 to KRW, so the won price and the coin price are the same number.
 // ponytail: static list, no real inventory behind it — same status as
 // settlement. Swap for the real product API when there is one.
 const CATEGORIES = [
   { id: 'all', label: '전체' },
-  { id: 'promo', label: '프로모션 세트' },
-  { id: 'premium', label: '프리미엄 라인' },
-  { id: 'basic', label: '베이직 라인' },
+  { id: 'adult', label: '성인' },
+  { id: 'kids', label: '키즈' },
+  { id: 'baby', label: '베이비' },
 ]
 
 const PRODUCTS = [
-  { id: 'dsm-1200-2box', category: 'promo', name: '드시모네 1200 (60포) 2BOX', tags: ['4개월분', '아연', '비타민D'], listPriceHhpc: 296000, priceHhpc: 192400, rating: 4.9, reviews: 710, image: '/store/dsm-1200-2box.png' },
-  { id: 'dsm-2000-2box', category: 'promo', name: '드시모네 2000 2BOX', tags: ['보장균수 2,000억'], listPriceHhpc: 256000, priceHhpc: 179200, rating: 4.8, reviews: 1672, image: '/store/dsm-2000-2box.png' },
-  { id: 'dsm-kids-blue-2box', category: 'promo', name: '드시모네 키즈 프리미엄 블루베리향 2BOX', tags: ['키즈 유산균 보장균수 1위'], listPriceHhpc: 196000, priceHhpc: 137200, rating: 4.7, reviews: 351, image: '/store/dsm-kids-blue-2box.png' },
-  { id: 'dsm-baby-step1-3box', category: 'promo', name: '드시모네 베이비 스텝1 3BOX', tags: ['모유ㆍ분유 수유 아기'], listPriceHhpc: 114000, priceHhpc: 79800, rating: 4.9, reviews: 1204, image: '/store/dsm-baby-step1-3box.png' },
+  { id: 'oy-caps-plus', category: 'adult', name: '드시모네 캡슐플러스 1박스 (60캡슐)', tags: ['보장균수 1,000억', '1개월분'], listPrice: 98000, price: 68600, rating: 5.0, reviews: 23, image: '/store/oy-caps-plus.jpg' },
+  { id: 'oy-2000', category: 'adult', name: '드시모네 2000 30포 1박스 (1개월분)', tags: ['보장균수 2,000억'], listPrice: 128000, price: 102400, rating: 4.7, reviews: 27, image: '/store/oy-2000.jpg' },
+  { id: 'oy-prime', category: 'adult', name: '드시모네 프라임 60포 1박스 (2개월분)', tags: ['보장균수 1,000억'], listPrice: 120000, price: 96000, rating: 4.9, reviews: 70, image: '/store/oy-prime.jpg' },
+  { id: 'oy-365-caps', category: 'adult', name: '드시모네 365 캡슐 30캡슐 (1개월분)', tags: [], listPrice: 40000, price: 32000, rating: 5.0, reviews: 14, image: '/store/oy-365-caps.jpg' },
+  { id: 'oy-365-grape', category: 'adult', name: '드시모네 365 포도향 30포 (1개월분)', tags: [], listPrice: 40000, price: 32000, rating: 4.0, reviews: 2, image: '/store/oy-365-grape.jpg' },
 
-  { id: 'dsm-4500', category: 'premium', name: '드시모네 4500 (30포)', tags: ['보장균수 4,500억'], listPriceHhpc: 168000, priceHhpc: 142800, rating: 4.9, reviews: 5179, image: '/store/dsm-4500.jpg' },
-  { id: 'dsm-2000', category: 'premium', name: '드시모네 2000 (30포)', tags: ['보장균수 2,000억'], priceHhpc: 128000, rating: 4.8, reviews: 1077, image: '/store/dsm-2000.jpg' },
-  { id: 'dsm-kids-basic', category: 'premium', name: '드시모네 키즈 프리미엄 기본향 (30포)', tags: ['키즈 유산균 보장균수 1위'], priceHhpc: 98000, rating: 4.8, reviews: 544, image: '/store/dsm-kids-basic.png' },
+  { id: 'oy-kids-blue', category: 'kids', name: '드시모네 키즈 스텝1 블루베리향 30포 1박스', tags: ['보장균수 200억', '3-7세'], listPrice: 78000, price: 62400, rating: 4.9, reviews: 46, image: '/store/oy-kids-blue.jpg' },
+  { id: 'oy-kids-apple', category: 'kids', name: '드시모네 키즈 스텝1 사과향 30포 1박스', tags: ['보장균수 200억', '3-7세'], listPrice: 78000, price: 62400, rating: 5.0, reviews: 23, image: '/store/oy-kids-apple.jpg' },
+  { id: 'oy-bear-chew', category: 'kids', name: '드시모네 곰돌이 츄어블 플러스 60정 (1박스)', tags: ['씹어먹는 츄어블'], listPrice: 40000, price: 32000, rating: 4.9, reviews: 1129, image: '/store/oy-bear-chew.jpg' },
 
-  { id: 'dsm-caps-plus', category: 'basic', name: '드시모네 캡슐 플러스 (60캡슐)', tags: ['보장균수 1,000억'], priceHhpc: 98000, rating: 4.8, reviews: 157, image: '/store/dsm-caps-plus.png' },
-  { id: 'dsm-365-caps', category: 'basic', name: '드시모네 365 캡슐 (30캡슐)', tags: [], priceHhpc: 48000, rating: 4.9, reviews: 790, image: '/store/dsm-365-caps.png' },
-  { id: 'dsm-kids-yogurt', category: 'basic', name: '드시모네 키즈 요거트 플레인 (3개입)', tags: [], priceHhpc: 12000, rating: 4.9, reviews: 102, image: '/store/dsm-kids-yogurt.png' },
+  { id: 'oy-baby-step1-2box', category: 'baby', name: '드시모네 베이비스텝1 30포 2박스 (2개월분)', tags: ['모유ㆍ분유 수유 아기'], listPrice: 76000, price: 60800, rating: 5.0, reviews: 123, image: '/store/oy-baby-step1-2box.jpg' },
+  { id: 'oy-baby-step2', category: 'baby', name: '드시모네 베이비스텝2 30포 1박스 (1개월분)', tags: ['유아식 섭취 아기'], listPrice: 48000, price: 38400, rating: 4.9, reviews: 126, image: '/store/oy-baby-step2.jpg' },
 ]
 
 export function getStoreProducts() {
   return {
-    brand: '드시모네',
+    brand: '드시모네 · OLIVE YOUNG',
     currency: STORE_CURRENCY,
     rewardRate: REWARD_RATE,
     merchantAddress: merchantAddress(),
@@ -71,8 +73,9 @@ async function balanceOf(symbol, holder) {
 }
 
 // A purchase settles as a real transfer of the price out of the operator
-// wallet. If HHPC alone can't cover it, the shortfall is swapped in first
-// from whichever held coin can fund it, then the transfer goes out.
+// wallet. If the store currency alone can't cover it, the shortfall is
+// swapped in first from whichever held coin can fund it, then the transfer
+// goes out.
 export async function purchaseProduct(productId) {
   const product = PRODUCTS.find((p) => p.id === productId)
   if (!product) throw new Error('상품을 찾을 수 없습니다')
@@ -87,8 +90,8 @@ export async function purchaseProduct(productId) {
   const held = await balanceOf(STORE_CURRENCY, operator)
   let swap = null
 
-  if (held < product.priceHhpc) {
-    const shortfall = product.priceHhpc - held
+  if (held < product.price) {
+    const shortfall = product.price - held
     // Overshoot by the worst-case fee+slippage so the swap can't land just
     // short of the price and fail the transfer that follows it.
     const needed = Math.ceil(shortfall * 1.01)
@@ -110,7 +113,7 @@ export async function purchaseProduct(productId) {
   const transfer = await transferToken({
     symbol: STORE_CURRENCY,
     to: merchant,
-    amount: product.priceHhpc,
+    amount: product.price,
     from: 'operator',
   })
 
@@ -118,7 +121,7 @@ export async function purchaseProduct(productId) {
   // gas. The two transfers aren't atomic: the payment has already settled by
   // now, so a failed reward is reported alongside a successful purchase
   // rather than rolling anything back or throwing the purchase away.
-  const rewardAmount = rewardFor(product.priceHhpc)
+  const rewardAmount = rewardFor(product.price)
   let reward = null
   if (rewardAmount > 0) {
     try {
@@ -139,8 +142,8 @@ export async function purchaseProduct(productId) {
   return {
     productId: product.id,
     productName: product.name,
-    price: product.priceHhpc,
-    netPaid: product.priceHhpc - (reward?.status === 'submitted' ? rewardAmount : 0),
+    price: product.price,
+    netPaid: product.price - (reward?.status === 'submitted' ? rewardAmount : 0),
     currency: STORE_CURRENCY,
     merchantAddress: merchant,
     swap,

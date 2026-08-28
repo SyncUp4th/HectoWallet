@@ -15,14 +15,14 @@ function sortProducts(products, sort) {
   if (sort === 'recommend') return products
   const sorted = [...products]
   if (sort === 'review') sorted.sort((a, b) => b.reviews - a.reviews)
-  if (sort === 'low') sorted.sort((a, b) => a.priceHhpc - b.priceHhpc)
-  if (sort === 'high') sorted.sort((a, b) => b.priceHhpc - a.priceHhpc)
+  if (sort === 'low') sorted.sort((a, b) => a.price - b.price)
+  if (sort === 'high') sorted.sort((a, b) => b.price - a.price)
   return sorted
 }
 
 function discountPercent(product) {
-  if (!product.listPriceHhpc) return null
-  return Math.round((1 - product.priceHhpc / product.listPriceHhpc) * 100)
+  if (!product.listPrice) return null
+  return Math.round((1 - product.price / product.listPrice) * 100)
 }
 
 function PurchaseModal({ receipt, label, onClose }) {
@@ -182,7 +182,7 @@ export default function StorePage() {
         {visible.map((p) => {
           const failure = errors[p.id]
           const off = discountPercent(p)
-          const affordable = held >= p.priceHhpc
+          const affordable = held >= p.price
           return (
             <article className="mallcard" key={p.id}>
               <div className={`mallcard-thumb cat-${p.category}`}>
@@ -211,18 +211,18 @@ export default function StorePage() {
               )}
               <h3 className="mallcard-name">{p.name}</h3>
 
-              {p.listPriceHhpc && (
-                <p className="mallcard-list">{p.listPriceHhpc.toLocaleString()} {label}</p>
+              {p.listPrice && (
+                <p className="mallcard-list">{p.listPrice.toLocaleString()} {label}</p>
               )}
               <p className="mallcard-price">
                 {off ? <span className="mallcard-off">{off}%</span> : null}
-                <strong>{p.priceHhpc.toLocaleString()}</strong> {label}
+                <strong>{p.price.toLocaleString()}</strong> {label}
               </p>
 
               {data.rewardRate > 0 && (
                 <p className="mallcard-reward">
                   <i className="ti ti-gift" aria-hidden="true"></i>
-                  {Math.round(data.rewardRate * 100)}%({Math.floor(p.priceHhpc * data.rewardRate).toLocaleString()} {label}) 적립
+                  {Math.round(data.rewardRate * 100)}%({Math.floor(p.price * data.rewardRate).toLocaleString()} {label}) 적립
                 </p>
               )}
 
