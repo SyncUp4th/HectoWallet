@@ -62,7 +62,7 @@ export const mockApi = {
   async getStoreProducts() {
     await delay()
     return {
-      brand: '드시모네 · OLIVE YOUNG',
+      brand: 'OLIVE YOUNG',
       currency: 'OLIVEPC',
       rewardRate: 0.02,
       merchantAddress: null,

@@ -53,7 +53,7 @@ const PRODUCTS = [
 
 export function getStoreProducts() {
   return {
-    brand: '드시모네 · OLIVE YOUNG',
+    brand: 'OLIVE YOUNG',
     currency: STORE_CURRENCY,
     rewardRate: REWARD_RATE,
     merchantAddress: merchantAddress(),
